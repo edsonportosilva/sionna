@@ -113,7 +113,7 @@ class TestFlattenDims(unittest.TestCase):
                 ]
         batch_size = 128
         for dims in dimsl:
-            for axis in range(0, len(dims)+1):
+            for axis in range(len(dims)+1):
                 for num_dims in range(2,len(dims)+2-axis):
                     f = F(dims, num_dims, axis)
                     r = f(batch_size)

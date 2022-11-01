@@ -120,16 +120,15 @@ class SystemLevelChannel(ChannelModel):
         See :py:attr:`~sionna.Config.xla_compat`.
         """
 
-        # Update the scenario topology
-        need_for_update = self._scenario.set_topology(  ut_loc,
-                                                        bs_loc,
-                                                        ut_orientations,
-                                                        bs_orientations,
-                                                        ut_velocities,
-                                                        in_state,
-                                                        los)
-
-        if need_for_update:
+        if need_for_update := self._scenario.set_topology(
+            ut_loc,
+            bs_loc,
+            ut_orientations,
+            bs_orientations,
+            ut_velocities,
+            in_state,
+            los,
+        ):
             # Update the LSP sampler
             self._lsp_sampler.topology_updated_callback()
 
@@ -162,11 +161,7 @@ class SystemLevelChannel(ChannelModel):
 # the topology. The value specified when calling is ignored.")
 
         # Sample LSPs if required
-        if self._always_generate_lsp:
-            lsp = self._lsp_sampler()
-        else:
-            lsp = self._lsp
-
+        lsp = self._lsp_sampler() if self._always_generate_lsp else self._lsp
         # Sample rays
         rays = self._ray_sampler(lsp)
 

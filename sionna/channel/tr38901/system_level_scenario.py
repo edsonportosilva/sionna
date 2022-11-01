@@ -73,9 +73,9 @@ class SystemLevelScenario(ABC):
 
         # UTs and BSs arrays
         assert isinstance(ut_array, PanelArray), \
-            "'ut_array' must be an instance of PanelArray"
+                "'ut_array' must be an instance of PanelArray"
         assert isinstance(bs_array, PanelArray), \
-            "'bs_array' must be an instance of PanelArray"
+                "'bs_array' must be an instance of PanelArray"
         self._ut_array = ut_array
         self._bs_array = bs_array
 
@@ -85,7 +85,7 @@ class SystemLevelScenario(ABC):
 
         # Direction
         assert direction in ("uplink", "downlink"), \
-            "'direction' must be 'uplink' or 'downlink'"
+                "'direction' must be 'uplink' or 'downlink'"
         self._direction = direction
 
         # Pathloss and shadow fading
@@ -352,9 +352,9 @@ class SystemLevelScenario(ABC):
         num_clusters_los = self._params_los["numClusters"]
         num_clusters_nlos = self._params_nlos["numClusters"]
         num_clusters_o2i = self._params_o2i["numClusters"]
-        num_clusters_max = tf.reduce_max([num_clusters_los, num_clusters_nlos,
-            num_clusters_o2i])
-        return num_clusters_max
+        return tf.reduce_max(
+            [num_clusters_los, num_clusters_nlos, num_clusters_o2i]
+        )
 
     @property
     def basic_pathloss(self):
@@ -492,9 +492,7 @@ class SystemLevelScenario(ABC):
         : [batch size, number of UTs, number of UTs], float
             Spatial correlation :math:`C`
         """
-        spatial_correlation_matrix = tf.math.exp(-self.matrix_ut_distance_2d/
-                                                 correlation_distance)
-        return spatial_correlation_matrix
+        return tf.math.exp(-self.matrix_ut_distance_2d / correlation_distance)
 
 
     @property
@@ -571,34 +569,34 @@ class SystemLevelScenario(ABC):
         if parameter_name in ('muDS', 'sigmaDS', 'muASD', 'sigmaASD', 'muASA',
                              'sigmaASA', 'muZSA', 'sigmaZSA'):
 
-            pa_los = self._params_los[parameter_name + 'a']
-            pb_los = self._params_los[parameter_name + 'b']
-            pc_los = self._params_los[parameter_name + 'c']
+            pa_los = self._params_los[f'{parameter_name}a']
+            pb_los = self._params_los[f'{parameter_name}b']
+            pc_los = self._params_los[f'{parameter_name}c']
 
-            pa_nlos = self._params_nlos[parameter_name + 'a']
-            pb_nlos = self._params_nlos[parameter_name + 'b']
-            pc_nlos = self._params_nlos[parameter_name + 'c']
+            pa_nlos = self._params_nlos[f'{parameter_name}a']
+            pb_nlos = self._params_nlos[f'{parameter_name}b']
+            pc_nlos = self._params_nlos[f'{parameter_name}c']
 
-            pa_o2i = self._params_o2i[parameter_name + 'a']
-            pb_o2i = self._params_o2i[parameter_name + 'b']
-            pc_o2i = self._params_o2i[parameter_name + 'c']
+            pa_o2i = self._params_o2i[f'{parameter_name}a']
+            pb_o2i = self._params_o2i[f'{parameter_name}b']
+            pc_o2i = self._params_o2i[f'{parameter_name}c']
 
             parameter_value_los = pa_los*log10(pb_los+fc) + pc_los
             parameter_value_nlos = pa_nlos*log10(pb_nlos+fc) + pc_nlos
             parameter_value_o2i = pa_o2i*log10(pb_o2i+fc) + pc_o2i
         elif parameter_name == "cDS":
 
-            pa_los = self._params_los[parameter_name + 'a']
-            pb_los = self._params_los[parameter_name + 'b']
-            pc_los = self._params_los[parameter_name + 'c']
+            pa_los = self._params_los[f'{parameter_name}a']
+            pb_los = self._params_los[f'{parameter_name}b']
+            pc_los = self._params_los[f'{parameter_name}c']
 
-            pa_nlos = self._params_nlos[parameter_name + 'a']
-            pb_nlos = self._params_nlos[parameter_name + 'b']
-            pc_nlos = self._params_nlos[parameter_name + 'c']
+            pa_nlos = self._params_nlos[f'{parameter_name}a']
+            pb_nlos = self._params_nlos[f'{parameter_name}b']
+            pc_nlos = self._params_nlos[f'{parameter_name}c']
 
-            pa_o2i = self._params_o2i[parameter_name + 'a']
-            pb_o2i = self._params_o2i[parameter_name + 'b']
-            pc_o2i = self._params_o2i[parameter_name + 'c']
+            pa_o2i = self._params_o2i[f'{parameter_name}a']
+            pb_o2i = self._params_o2i[f'{parameter_name}b']
+            pc_o2i = self._params_o2i[f'{parameter_name}c']
 
             parameter_value_los = tf.math.maximum(pa_los,
                 pb_los - pc_los*log10(fc))

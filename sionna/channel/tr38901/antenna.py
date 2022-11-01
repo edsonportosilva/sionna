@@ -40,7 +40,7 @@ class AntennaElement:
                 ):
 
         assert pattern in ["omni", "38.901"], \
-            "The radiation_pattern must be one of [\"omni\", \"38.901\"]."
+                "The radiation_pattern must be one of [\"omni\", \"38.901\"]."
         assert dtype.is_complex, "'dtype' must be complex type"
 
         self._pattern = pattern
@@ -384,7 +384,7 @@ class PanelArray:
         assert dtype.is_complex, "'dtype' must be complex type"
 
         assert polarization in ('single', 'dual'), \
-            "polarization must be either 'single' or 'dual'"
+                "polarization must be either 'single' or 'dual'"
 
         # Setting default values for antenna and panel spacings if not
         # specified by the user
@@ -396,18 +396,18 @@ class PanelArray:
         # Default values of panel spacing is the pannel size + 0.5
         if panel_vertical_spacing is None:
             panel_vertical_spacing = (num_rows_per_panel-1)\
-                *element_vertical_spacing+0.5
+                    *element_vertical_spacing+0.5
         if panel_horizontal_spacing is None:
             panel_horizontal_spacing = (num_cols_per_panel-1)\
-                *element_horizontal_spacing+0.5
+                    *element_horizontal_spacing+0.5
 
         # Check that panel spacing is larger than panel dimensions
         assert panel_horizontal_spacing > (num_cols_per_panel-1)\
-            *element_horizontal_spacing,\
-                "Pannel horizontal spacing must be larger than the panel width"
+                *element_horizontal_spacing,\
+                    "Pannel horizontal spacing must be larger than the panel width"
         assert panel_vertical_spacing > (num_rows_per_panel-1)\
-            *element_vertical_spacing,\
-            "Pannel vertical spacing must be larger than panel height"
+                *element_vertical_spacing,\
+                "Pannel vertical spacing must be larger than panel height"
 
         self._num_rows = tf.constant(num_rows, tf.int32)
         self._num_cols = tf.constant(num_cols, tf.int32)
@@ -442,13 +442,13 @@ class PanelArray:
         # polarization must be one of {"V", "H", "VH", "cross"}
         if polarization == 'single':
             assert polarization_type in ["V", "H"],\
-                "For single polarization, polarization_type must be 'V' or 'H'"
+                    "For single polarization, polarization_type must be 'V' or 'H'"
             slant_angle = 0 if polarization_type == "V" else PI/2
             self._ant_pol1 = AntennaElement(antenna_pattern, slant_angle,
                 self._dtype)
         else:
             assert polarization_type in ["VH", "cross"],\
-            "For dual polarization, polarization_type must be 'VH' or 'cross'"
+                "For dual polarization, polarization_type must be 'VH' or 'cross'"
             slant_angle = 0 if polarization == "VH" else -PI/4
             self._ant_pol1 = AntennaElement(antenna_pattern, slant_angle,
                 self._dtype)

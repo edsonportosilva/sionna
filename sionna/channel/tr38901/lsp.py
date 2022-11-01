@@ -107,10 +107,7 @@ class LSPGenerator:
         elif self._scenario.o2i_model == 'high':
             pl_o2i = self._o2i_high_loss()
 
-        ## Total path loss, including O2I penetration
-        pl = pl_b + pl_o2i
-
-        return pl
+        return pl_b + pl_o2i
 
     def __call__(self):
 

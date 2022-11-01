@@ -133,8 +133,7 @@ class Filter(ABC, Layer):
     def length(self):
         """The filter length in samples"""
         l = self._span_in_symbols*self._samples_per_symbol
-        l = 2*(l//2)+1 # Force length to be the next odd number
-        return l
+        return 2*(l//2)+1
 
     @property
     def window(self):
@@ -281,8 +280,7 @@ class Filter(ABC, Layer):
         dtype = tf.as_dtype(self.dtype)
         if conjugate and dtype.is_complex:
             h = tf.math.conj(h)
-        y = convolve(x,h,padding)
-        return y
+        return convolve(x,h,padding)
 
 
 class RaisedCosineFilter(Filter):
@@ -422,8 +420,8 @@ class RaisedCosineFilter(Filter):
                 h[i] = np.pi/4/symbol_duration*np.sinc(1/2/beta)
             else:
                 h[i] = 1./symbol_duration*np.sinc(tt/symbol_duration)\
-                    * np.cos(np.pi*beta*tt/symbol_duration)\
-                    /(1-(2*beta*tt/symbol_duration)**2)
+                        * np.cos(np.pi*beta*tt/symbol_duration)\
+                        /(1-(2*beta*tt/symbol_duration)**2)
         return h
 
 
@@ -785,26 +783,25 @@ class CustomFilter(Filter):
                  **kwargs):
 
         assert samples_per_symbol is not None and samples_per_symbol>0, \
-        "samples_per_symbol must be positive"
+            "samples_per_symbol must be positive"
         self._samples_per_symbol = samples_per_symbol
 
         if coefficients is None:
             assert span_in_symbols is not None and span_in_symbols>0, \
-                "span_in_symbols must be positive"
+                    "span_in_symbols must be positive"
             self._span_in_symbols = span_in_symbols
 
-        if coefficients is not None:
-            l = coefficients.shape[-1]
-            assert l%2==1, \
-                "The number of coefficients must be odd"
-            self._span_in_symbols = l//self._samples_per_symbol
-        else:
             if dtype.is_complex:
                 h = RandomNormal()([2, self.length], dtype.real_dtype)
                 coefficients = tf.complex(h[0], h[1])
             else:
                 coefficients = RandomNormal()([self.length], dtype)
 
+        else:
+            l = coefficients.shape[-1]
+            assert l%2==1, \
+                    "The number of coefficients must be odd"
+            self._span_in_symbols = l//self._samples_per_symbol
         # Coefficients setter initialises coefficients properly
         self._h = tf.constant(coefficients, dtype)
 

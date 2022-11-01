@@ -188,10 +188,7 @@ def generate_rm_code(r, m):
     d_min = 2**(m-r)
 
     # calc k to verify results
-    k = 0
-    for i in range(r+1):
-        k += int(comb(m,i))
-
+    k = sum(int(comb(m,i)) for i in range(r+1))
     # select positions to freeze
     # freeze all rows that have weight < m-r
     w = np.zeros(n)

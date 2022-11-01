@@ -199,7 +199,7 @@ class TDL(ChannelModel):
             self._max_speed = self._min_speed
         else:
             assert max_speed >= min_speed, \
-                "min_speed cannot be larger than max_speed"
+                    "min_speed cannot be larger than max_speed"
             self._max_speed = tf.constant(max_speed, real_dtype)
 
         # Pre-compute maximum and minimum Doppler shifts
@@ -208,7 +208,7 @@ class TDL(ChannelModel):
 
         # Precompute average angles of arrivals for each sinusoid
         alpha_const = 2.*PI/num_sinusoids * \
-                      tf.range(1., self._num_sinusoids+1, 1., dtype=real_dtype)
+                          tf.range(1., self._num_sinusoids+1, 1., dtype=real_dtype)
         self._alpha_const = tf.reshape( alpha_const,
                                         [   1, # batch size
                                             1, # num rx

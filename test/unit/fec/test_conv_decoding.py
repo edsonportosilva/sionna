@@ -43,21 +43,20 @@ class ConvExample(tf.keras.Model):
     def call(self, ebno, batch_size):
         # Generate a batch of random bit vectors
         no = tf.cast((1/self.rate) * (10 ** (-ebno / 10)),tf.float32)
-        
+
         msg = tf.cast(self.binary_source([batch_size, self.k]), tf.int32)
         cw = self.encoder(msg)
         x = 2 * cw - 1
 
         x_cpx = tf.complex(tf.cast(x, tf.float32), tf.zeros(x.shape))
-        
+
         y_cpx = self.channel((x_cpx, no))
         y = tf.math.real(y_cpx)
         llr = 2.*y/no
-        
+
         msghat = tf.cast(self.decoder(llr), tf.int32)
-        
-        errs_ = int(tf.math.count_nonzero(msghat-msg))
-        return errs_
+
+        return int(tf.math.count_nonzero(msghat-msg))
 
 class TestViterbiDecoding(unittest.TestCase):
 
@@ -237,7 +236,7 @@ class TestViterbiDecoding(unittest.TestCase):
         for idx, gen_poly in enumerate(gs):
             dec = ViterbiDecoder(gen_poly=gen_poly, method='soft')
             gen_str = gen_strs[idx]
-            
+
             # load pre-computed codewords and channel outputs
             u_ref = np.load(ref_path + gen_str + 'ref_u.npy')
             # yref is generated from AWGN channel with Es/N0=4.95dB

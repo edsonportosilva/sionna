@@ -154,12 +154,12 @@ class PilotPattern():
         pilots = self.pilots.numpy()
 
         if tx_ind is None:
-            tx_ind = range(0, self.num_tx)
+            tx_ind = range(self.num_tx)
         elif not isinstance(tx_ind, list):
             tx_ind = [tx_ind]
 
         if stream_ind is None:
-            stream_ind = range(0, self.num_streams_per_tx)
+            stream_ind = range(self.num_streams_per_tx)
         elif not isinstance(stream_ind, list):
             stream_ind = [stream_ind]
 

@@ -105,7 +105,7 @@ class TestUtils(unittest.TestCase):
 
         tester = ber_tester(errors, shape)
 
-        for _,ber in enumerate(bers_true):
+        for ber in bers_true:
             b, b_hat = tester.get_samples(0, 0)
             ber_hat = compute_ber(b, b_hat)
             self.assertTrue(np.allclose(ber, ber_hat))
@@ -118,7 +118,7 @@ class TestUtils(unittest.TestCase):
 
         tester = ber_tester(errors, shape)
 
-        for _,e in enumerate(errors):
+        for e in errors:
             b, b_hat = tester.get_samples(0, 0)
             errors_hat = count_errors(b, b_hat)
             self.assertTrue(np.allclose(e, errors_hat))
@@ -131,16 +131,12 @@ class TestUtils(unittest.TestCase):
 
         tester = ber_tester(errors, shape)
 
-        for _,e in enumerate(errors):
+        for _ in errors:
             b, b_hat = tester.get_samples(0, 0)
             bler_hat = count_block_errors(b, b_hat)
 
             # ground truth
-            bler = 0
-            for idx in range(shape[0]):
-                if not np.allclose(b[idx,:], b_hat[idx,:]):
-                    bler +=1
-
+            bler = sum(not np.allclose(b[idx,:], b_hat[idx,:]) for idx in range(shape[0]))
             self.assertTrue(np.allclose(bler, bler_hat))
 
     def test_compute_bler(self):
@@ -151,15 +147,12 @@ class TestUtils(unittest.TestCase):
 
         tester = ber_tester(errors, shape)
 
-        for _,e in enumerate(errors):
+        for _ in errors:
             b, b_hat = tester.get_samples(0, 0)
             bler_hat = compute_bler(b, b_hat)
 
             # ground truth
-            bler = 0
-            for idx in range(shape[0]):
-                if not np.allclose(b[idx,:], b_hat[idx,:]):
-                    bler +=1
+            bler = sum(not np.allclose(b[idx,:], b_hat[idx,:]) for idx in range(shape[0]))
             bler /= shape[0]
             self.assertTrue(np.allclose(bler, bler_hat))
 

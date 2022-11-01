@@ -50,8 +50,7 @@ def polynomial_selector(rate, constraint_length):
             1/2: rate_half_dict,
             1/3: rate_third_dict
     }
-    gen_poly = gen_poly_dict[rate][constraint_length]
-    return gen_poly
+    return gen_poly_dict[rate][constraint_length]
 
 
 class Trellis(object):
@@ -99,8 +98,7 @@ class Trellis(object):
         op = np.zeros(self.conv_n, int)
         assert len(st) == len(self.gen_poly[0])
         for i, poly in enumerate(self.gen_poly):
-            op_int = sum(
-                [int(char)*int(poly[idx]) for idx,char in enumerate(st)])
+            op_int = sum(int(char)*int(poly[idx]) for idx,char in enumerate(st))
             op[i] = int2bin(op_int % 2, 1)[0]
         return op
 

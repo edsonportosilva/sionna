@@ -267,12 +267,5 @@ class FlatFadingChannel(tf.keras.layers.Layer):
         h = self._gen_chn(batch_size)
 
         # Apply the channel to the input
-        if self._add_awgn:
-            y = self._app_chn([x, h, no])
-        else:
-            y = self._app_chn([x, h])
-
-        if self._return_channel:
-            return y, h
-        else:
-            return y
+        y = self._app_chn([x, h, no]) if self._add_awgn else self._app_chn([x, h])
+        return (y, h) if self._return_channel else y

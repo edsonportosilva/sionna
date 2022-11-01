@@ -138,16 +138,15 @@ class RaysGenerator:
         zoa = deg_2_rad(zoa)
         zod = deg_2_rad(zod)
 
-        # Storing and returning rays
-        rays = Rays(delays = delays,
-                    powers = powers,
-                    aoa    = aoa,
-                    aod    = aod,
-                    zoa    = zoa,
-                    zod    = zod,
-                    xpr    = xpr)
-
-        return rays
+        return Rays(
+            delays=delays,
+            powers=powers,
+            aoa=aoa,
+            aod=aod,
+            zoa=zoa,
+            zod=zod,
+            xpr=xpr,
+        )
 
     def topology_updated_callback(self):
         """
@@ -720,9 +719,7 @@ class RaysGenerator:
                 scenario.num_clusters_max, scenario.rays_per_cluster])
         shuffled_indices = tf.argsort(random_numbers)
         shuffled_indices = tf.tile(shuffled_indices, [1, 1, num_ut, 1, 1])
-        # Shuffling the angles
-        shuffled_angles = tf.gather(angles,shuffled_indices, batch_dims=4)
-        return shuffled_angles
+        return tf.gather(angles,shuffled_indices, batch_dims=4)
 
     def _random_coupling(self, aoa, aod, zoa, zod):
         # pylint: disable=line-too-long
@@ -804,7 +801,6 @@ class RaysGenerator:
         x = tf.random.normal(shape=[batch_size, num_bs, num_ut, num_clusters,
             num_rays_per_cluster], mean=mu_xpr, stddev=std_xpr,
             dtype=self._scenario.dtype.real_dtype)
-        # To linear domain
-        cross_polarization_power_ratios = tf.math.pow(tf.constant(10.,
-            self._scenario.dtype.real_dtype), x/10.0)
-        return cross_polarization_power_ratios
+        return tf.math.pow(
+            tf.constant(10.0, self._scenario.dtype.real_dtype), x / 10.0
+        )

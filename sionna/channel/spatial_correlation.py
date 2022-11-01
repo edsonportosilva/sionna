@@ -94,10 +94,7 @@ class KroneckerModel(SpatialCorrelation):
     @r_tx.setter
     def r_tx(self, value):
         self._r_tx = value
-        if self._r_tx is not None:
-            self._r_tx_sqrt = matrix_sqrt(value)
-        else:
-            self._r_tx_sqrt = None
+        self._r_tx_sqrt = matrix_sqrt(value) if self._r_tx is not None else None
 
     @property
     def r_rx(self):
@@ -115,10 +112,7 @@ class KroneckerModel(SpatialCorrelation):
     @r_rx.setter
     def r_rx(self, value):
         self._r_rx = value
-        if self._r_rx is not None:
-            self._r_rx_sqrt = matrix_sqrt(value)
-        else:
-            self._r_rx_sqrt = None
+        self._r_rx_sqrt = matrix_sqrt(value) if self._r_rx is not None else None
 
     def __call__(self, h):
         if self._r_tx_sqrt is not None:

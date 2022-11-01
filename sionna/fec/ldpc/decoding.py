@@ -279,17 +279,17 @@ class LDPCBPDecoder(Layer):
         assert num_iter>=0, 'num_iter cannot be negative.'
         assert isinstance(keep_state, bool), 'keep_state must be bool.'
         assert isinstance(output_dtype, tf.DType), \
-                                'output_dtype must be tf.Dtype.'
+                                    'output_dtype must be tf.Dtype.'
 
         if isinstance(pcm, np.ndarray):
             assert np.array_equal(pcm, pcm.astype(bool)), 'PC matrix \
                 must be binary.'
         elif isinstance(pcm, sp.sparse.csr_matrix):
             assert np.array_equal(pcm.data, pcm.data.astype(bool)), \
-                'PC matrix must be binary.'
+                    'PC matrix must be binary.'
         elif isinstance(pcm, sp.sparse.csc_matrix):
             assert np.array_equal(pcm.data, pcm.data.astype(bool)), \
-                'PC matrix must be binary.'
+                    'PC matrix must be binary.'
         else:
             raise TypeError("Unsupported dtype of pcm.")
 
@@ -400,10 +400,7 @@ class LDPCBPDecoder(Layer):
     @property
     def edge_weights(self):
         """Trainable weights of the BP decoder."""
-        if not self._has_weights:
-            return []
-        else:
-            return self._edge_weights
+        return self._edge_weights if self._has_weights else []
 
     @property
     def output_dtype(self):
@@ -558,10 +555,7 @@ class LDPCBPDecoder(Layer):
     def _where_ragged_inv(self, msg):
         """Helper to replace small elements from ragged tensor (called with
         map_flat_values) with exact `0`."""
-        msg_mod =  tf.where(tf.less(tf.abs(msg), 1e-7),
-                            tf.zeros_like(msg),
-                            msg)
-        return msg_mod
+        return tf.where(tf.less(tf.abs(msg), 1e-7), tf.zeros_like(msg), msg)
 
     def _cn_update_tanh(self, msg):
         """Check node update function implementing the exact boxplus operation.
@@ -1169,7 +1163,7 @@ class LDPC5GDecoder(LDPCBPDecoder):
         self._llr_max = 20 # internal max value for LLR initialization
 
         assert isinstance(output_dtype, tf.DType), \
-                                'output_dtype must be tf.DType.'
+                                    'output_dtype must be tf.DType.'
         if output_dtype not in (tf.float16, tf.float32, tf.float64):
             raise ValueError(
                 'output_dtype must be {tf.float16, tf.float32, tf.float64}.')
@@ -1324,15 +1318,12 @@ class LDPC5GDecoder(LDPCBPDecoder):
             # reconstruct u_hat # code is systematic
             u_hat = tf.slice(x_hat, [0,0], [batch_size, self.encoder.k])
             # Reshape u_hat so that it matches the original input dimensions
-            output_shape = input_shape[0:-1] + [self.encoder.k]
+            output_shape = input_shape[:-1] + [self.encoder.k]
             # overwrite first dimension as this could be None (Keras)
             output_shape[0] = -1
             u_reshaped = tf.reshape(u_hat, output_shape)
 
-            # enable other output datatypes than tf.float32
-            u_out = tf.cast(u_reshaped, self._output_dtype)
-            return u_out
-
+            return tf.cast(u_reshaped, self._output_dtype)
         else: # return all codeword bits
             # the transmitted CW bits are not the same as used during decoding
             # cf. last parts of 5G encoding function
@@ -1360,6 +1351,4 @@ class LDPC5GDecoder(LDPCBPDecoder):
             input_shape[0] = -1
             x_short= tf.reshape(x_short, input_shape)
 
-            # enable other output datatypes than tf.float32
-            x_out = tf.cast(x_short, self._output_dtype)
-            return x_out
+            return tf.cast(x_short, self._output_dtype)

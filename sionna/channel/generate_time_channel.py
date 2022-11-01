@@ -92,7 +92,11 @@ class GenerateTimeChannel:
                                     self._num_time_steps + self._l_tot - 1,
                                     self._bandwidth)
 
-        hm = cir_to_time_channel(self._bandwidth, h, tau, self._l_min,
-                                 self._l_max, self._normalize_channel)
-
-        return hm
+        return cir_to_time_channel(
+            self._bandwidth,
+            h,
+            tau,
+            self._l_min,
+            self._l_max,
+            self._normalize_channel,
+        )

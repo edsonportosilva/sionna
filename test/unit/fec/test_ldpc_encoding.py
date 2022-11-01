@@ -229,7 +229,7 @@ class TestLDPC5GEncoder(unittest.TestCase):
         for s in f:
             m = re.match(r'k(.*)_n(.*)_G.npy', s)
             if m is not None: # ignore files that did not match
-                params.append([int(m.group(1)), int(m.group(2))])
+                params.append([int(m[1]), int(m[2])])
         # params contains a list of all (k,n) parameters
 
         source = BinarySource()
@@ -238,8 +238,9 @@ class TestLDPC5GEncoder(unittest.TestCase):
             k = int(p[0])
             n = int(p[1])
             gm_sp = np.array(
-                    np.load('../test/codes/ldpc/k{}_n{}_G.npy'.format(k, n),
-                    allow_pickle=True))
+                np.load(f'../test/codes/ldpc/k{k}_n{n}_G.npy', allow_pickle=True)
+            )
+
             gm = np.zeros([k,n])
             for i in range(len(gm_sp[0,:])):
                 c = gm_sp[0,i]
@@ -258,9 +259,8 @@ class TestLDPC5GEncoder(unittest.TestCase):
             c_ref = tf.squeeze(c_ref) # remove new dim
             c = c.numpy()
             c_ref = c_ref.numpy()
-            print("Testing for k={}, n={}".format(k, n))
-            self.assertTrue(np.array_equal(c, c_ref),
-                            "not equal for k={}, n={}".format(k, n))
+            print(f"Testing for k={k}, n={n}")
+            self.assertTrue(np.array_equal(c, c_ref), f"not equal for k={k}, n={n}")
 
     def test_multi_dimensional(self):
         """Test against arbitrary shapes.

@@ -116,7 +116,7 @@ class Model(tf.keras.Model):
                  subcarrier_spacing = 15e3 
                 ):
         super().__init__()
-        
+
         # Provided parameters
         self._domain = domain
         self._direction = direction
@@ -126,7 +126,7 @@ class Model(tf.keras.Model):
         self._speed = speed
         self._cyclic_prefix_length = cyclic_prefix_length
         self._pilot_ofdm_symbol_indices = pilot_ofdm_symbol_indices
-        
+
         # System parameters
         self._carrier_frequency = 2.6e9
         self._subcarrier_spacing = subcarrier_spacing
@@ -139,12 +139,12 @@ class Model(tf.keras.Model):
         self._num_guard_carriers = [5, 6]
         self._pilot_pattern = "kronecker"
         self._pilot_ofdm_symbol_indices = pilot_ofdm_symbol_indices
-        self._num_bits_per_symbol = 2 
+        self._num_bits_per_symbol = 2
         self._coderate = 0.5
-          
+
         # Required system components
         self._sm = StreamManagement(np.array([[1]]), self._num_streams_per_tx)
-        
+
         self._rg = ResourceGrid(num_ofdm_symbols=self._num_ofdm_symbols,
                                 fft_size=self._fft_size,
                                 subcarrier_spacing = self._subcarrier_spacing,
@@ -155,24 +155,30 @@ class Model(tf.keras.Model):
                                 dc_null=self._dc_null,
                                 pilot_pattern=self._pilot_pattern,
                                 pilot_ofdm_symbol_indices=self._pilot_ofdm_symbol_indices) 
-        
+
         self._n = int(self._rg.num_data_symbols * self._num_bits_per_symbol)
         self._k = int(self._n * self._coderate) 
-        
-        self._ut_array = AntennaArray(num_rows=1,
-                                      num_cols=int(self._num_ut_ant/2),
-                                      polarization="dual",
-                                      polarization_type="cross",
-                                      antenna_pattern="38.901",
-                                      carrier_frequency=self._carrier_frequency)
-        
-        self._bs_array = AntennaArray(num_rows=1,
-                                      num_cols=int(self._num_bs_ant/2),
-                                      polarization="dual",
-                                      polarization_type="cross",
-                                      antenna_pattern="38.901",
-                                      carrier_frequency=self._carrier_frequency)
-        
+
+        self._ut_array = AntennaArray(
+            num_rows=1,
+            num_cols=self._num_ut_ant // 2,
+            polarization="dual",
+            polarization_type="cross",
+            antenna_pattern="38.901",
+            carrier_frequency=self._carrier_frequency,
+        )
+
+
+        self._bs_array = AntennaArray(
+            num_rows=1,
+            num_cols=self._num_bs_ant // 2,
+            polarization="dual",
+            polarization_type="cross",
+            antenna_pattern="38.901",
+            carrier_frequency=self._carrier_frequency,
+        )
+
+
         self._cdl = CDL(model=self._cdl_model,
                         delay_spread=self._delay_spread,
                         carrier_frequency=self._carrier_frequency,
@@ -180,9 +186,9 @@ class Model(tf.keras.Model):
                         bs_array=self._bs_array,
                         direction=self._direction,
                         min_speed=self._speed)
-        
+
         self._frequencies = subcarrier_frequencies(self._rg.fft_size, self._rg.subcarrier_spacing)
-        
+
         if self._domain == "freq":  
             self._channel_freq = ApplyOFDMChannel(add_awgn=True)
 
@@ -194,15 +200,15 @@ class Model(tf.keras.Model):
                                                   add_awgn=True)
             self._modulator = OFDMModulator(self._cyclic_prefix_length)
             self._demodulator = OFDMDemodulator(self._fft_size, self._l_min, self._cyclic_prefix_length)
-               
+
         self._binary_source = BinarySource()
         self._encoder = LDPC5GEncoder(self._k, self._n)
         self._mapper = Mapper("qam", self._num_bits_per_symbol)
         self._rg_mapper = ResourceGridMapper(self._rg)
-        
+
         if self._direction == "downlink":
             self._zf_precoder = ZFPrecoder(self._rg, self._sm, return_effective_channel=True)
-       
+
         self._ls_est = LSChannelEstimator(self._rg, interpolation_type="nn")
         self._lmmse_equ = LMMSEEqualizer(self._rg, self._sm)
         self._demapper = Demapper("app", "qam", self._num_bits_per_symbol)

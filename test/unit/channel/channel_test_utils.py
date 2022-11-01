@@ -148,13 +148,13 @@ def log10DS(model, submodel, fc):
         elif submodel == 'nlos' : return (-7.43, 0.48)
         elif submodel == 'o2i' : return (-7.47, 0.24)
     elif model == 'umi':
-        if fc < 2. : fc = 2.
+        fc = max(fc, 2.)
         if submodel == 'los' : return (-0.24*np.log10(1.+fc) - 7.14, 0.38)
         elif submodel == 'nlos' : return (-0.24*np.log10(1+ fc) - 6.83,
                                           0.16*np.log10(1.+fc) + 0.28)
         elif submodel == 'o2i' : return (-6.62, 0.32)
     elif model == 'uma':
-        if fc < 6. : fc = 6.
+        fc = max(fc, 6.)
         if submodel == 'los' : return (-6.955 - 0.0963*np.log10(fc), 0.66)
         elif submodel == 'nlos' : return (-6.28 - 0.204*np.log10(fc), 0.39)
         elif submodel == 'o2i' : return (-6.62, 0.32)
@@ -189,13 +189,13 @@ def log10ASD(model, submodel, fc):
         elif submodel == 'nlos' : return (0.95, 0.45)
         elif submodel == 'o2i' : return (0.67, 0.18)
     elif model == 'umi':
-        if fc < 2. : fc = 2.
+        fc = max(fc, 2.)
         if submodel == 'los' : return (-0.05*np.log10(1.+fc) + 1.21, 0.41)
         elif submodel == 'nlos' : return (-0.23*np.log10(1+ fc) + 1.53,
                                           0.11*np.log10(1.+fc) + 0.33)
         elif submodel == 'o2i' : return (1.25, 0.42)
     elif model == 'uma':
-        if fc < 6. : fc = 6.
+        fc = max(fc, 6.)
         if submodel == 'los' : return (1.06 + 0.1114*np.log10(fc), 0.28)
         elif submodel == 'nlos' : return (1.5 - 0.1144*np.log10(fc), 0.28)
         elif submodel == 'o2i' : return (1.25, 0.42)
@@ -230,14 +230,14 @@ def log10ASA(model, submodel, fc):
         elif submodel == 'nlos' : return (1.52, 0.13)
         elif submodel == 'o2i' : return (1.66, 0.21)
     elif model == 'umi':
-        if fc < 2. : fc = 2.
+        fc = max(fc, 2.)
         if submodel == 'los' : return (-0.08*np.log10(1+fc) + 1.73,
                                        0.014*np.log10(1+fc) + 0.28)
         elif submodel == 'nlos' : return (-0.08*np.log10(1+fc) + 1.81,
                                           0.05*np.log10(1+fc) + 0.3)
         elif submodel == 'o2i' : return (1.76, 0.16)
     elif model == 'uma':
-        if fc < 6. : fc = 6.
+        fc = max(fc, 6.)
         if submodel == 'los' : return (1.81, 0.20)
         elif submodel == 'nlos' : return (2.08 - 0.27*np.log10(fc), 0.11)
         elif submodel == 'o2i' : return (1.76, 0.16)
@@ -272,14 +272,14 @@ def log10ZSA(model, submodel, fc):
         elif submodel == 'nlos' : return (0.58, 0.37)
         elif submodel == 'o2i' : return (0.93, 0.22)
     elif model == 'umi':
-        if fc < 2. : fc = 2.
+        fc = max(fc, 2.)
         if submodel == 'los' : return (-0.1*np.log10(1+fc) + 0.73,
                                        -0.04*np.log10(1+fc) + 0.34)
         elif submodel == 'nlos' : return (-0.04*np.log10(1+fc) + 0.92,
                                           -0.07*np.log10(1+fc) + 0.41)
         elif submodel == 'o2i' : return (1.01, 0.43)
     elif model == 'uma':
-        if fc < 6. : fc = 6.
+        fc = max(fc, 6.)
         if submodel == 'los' : return (0.95, 0.16)
         elif submodel == 'nlos' : return (-0.3236*np.log10(fc) + 1.512, 0.16)
         elif submodel == 'o2i' : return (1.01, 0.43)
@@ -319,20 +319,17 @@ def log10SF_dB(model, submodel, d_2d, fc, h_bs, h_ut):
 
     if model == 'rma':
         d_bp = 2.*np.pi*fc/3e8*h_bs*h_ut
-        if submodel == 'los' :
-            if d_2d < d_bp:
-                return (0.0, 4.0)
-            else:
-                return (0.0, 6.0)
-        elif submodel == 'nlos' : return (0.0, 8.0)
-        elif submodel == 'o2i' : return (0.0, 8.0)
-    elif model == 'umi':
-        if submodel == 'los' : return (0.0, 4.0)
-        elif submodel == 'nlos' : return (0.0, 7.82)
-        elif submodel == 'o2i' : return (0.0, 7.0)
+        if submodel == 'los':
+            return (0.0, 4.0) if d_2d < d_bp else (0.0, 6.0)
+        elif submodel in ['nlos', 'o2i']:
+            return (0.0, 8.0)
     elif model == 'uma':
         if submodel == 'los' : return (0.0, 4.0)
         elif submodel == 'nlos' : return (0.0, 6.0)
+        elif submodel == 'o2i' : return (0.0, 7.0)
+    elif model == 'umi':
+        if submodel == 'los' : return (0.0, 4.0)
+        elif submodel == 'nlos' : return (0.0, 7.82)
         elif submodel == 'o2i' : return (0.0, 7.0)
 
 def log10K_dB(model, submodel):
@@ -357,17 +354,16 @@ def log10K_dB(model, submodel):
     """
 
     if model == 'rma':
-        if submodel == 'los' : return (7.0, 4.0)
-        elif submodel == 'nlos' : return None
-        elif submodel == 'o2i' : return None
-    elif model == 'umi':
-        if submodel == 'los' : return (9.0, 5.0)
-        elif submodel == 'nlos' : return None
-        elif submodel == 'o2i' : return None
+        if submodel == 'los':
+            if submodel == 'los' : return (7.0, 4.0)
+        elif submodel in ['nlos', 'o2i']:
+            return None
     elif model == 'uma':
-        if submodel == 'los' : return (9.0, 3.5)
-        elif submodel == 'nlos' : return None
-        elif submodel == 'o2i' : return None
+        if submodel == 'los': return (9.0, 3.5)
+        elif submodel in ['nlos', 'o2i']: return None
+    elif model == 'umi':
+        if submodel == 'los': return (9.0, 5.0)
+        elif submodel in ['nlos', 'o2i']: return None
 
 def log10ZSD(model, submodel, d_2d, fc, h_bs, h_ut):
     r"""
@@ -404,36 +400,27 @@ def log10ZSD(model, submodel, d_2d, fc, h_bs, h_ut):
 
     fc = fc / 1e9
     if model == 'rma':
-        if submodel == 'los' : return (np.maximum(-1.0,
-                                    -0.17*d_2d/1000.-0.01*(h_ut-1.5)+0.22),
-                                       0.34)
-        elif submodel == 'nlos' : return (np.maximum(-1.0,
-                                    -0.19*d_2d/1000.-0.01*(h_ut-1.5)+0.28),
-                                       0.30)
-        elif submodel == 'o2i' : return (np.maximum(-1.0,
-                                    -0.19*d_2d/1000.-0.01*(h_ut-1.5)+0.28),
-                                       0.30)
+        if submodel == 'los': return (np.maximum(-1.0,
+            -0.17*d_2d/1000.-0.01*(h_ut-1.5)+0.22),
+               0.34)
+        elif submodel in ['nlos', 'o2i']: return (np.maximum(-1.0,
+            -0.19*d_2d/1000.-0.01*(h_ut-1.5)+0.28),
+               0.30)
     elif model == 'umi':
-        if submodel == 'los' : return (np.maximum(-0.21,
-                                -14.8*d_2d/1000.+0.01*np.abs(h_ut-h_bs)+0.83),
-                                       0.35)
-        elif submodel == 'nlos' : return (np.maximum(-0.5,
-                        -3.1*d_2d/1000.+0.01*np.maximum(h_ut-h_bs, 0.0)+0.2),
-                                       0.35)
-        elif submodel == 'o2i' : return (np.maximum(-0.5,
-                        -3.1*d_2d/1000.+0.01*np.maximum(h_ut-h_bs, 0.0)+0.2),
-                                       0.35)
+        if submodel == 'los': return (np.maximum(-0.21,
+            -14.8*d_2d/1000.+0.01*np.abs(h_ut-h_bs)+0.83),
+                   0.35)
+        elif submodel in ['nlos', 'o2i']: return (np.maximum(-0.5,
+            -3.1*d_2d/1000.+0.01*np.maximum(h_ut-h_bs, 0.0)+0.2),
+                           0.35)
     elif model == 'uma':
-        if fc < 6. : fc = 6.
-        if submodel == 'los' : return (np.maximum(-0.5,
-                        -2.1*d_2d/1000.-0.01*(h_ut-1.5)+0.75),
-                                       0.40)
-        elif submodel == 'nlos' : return (np.maximum(-0.5,
-                        -2.1*d_2d/1000.-0.01*(h_ut-1.5)+0.9),
-                                       0.49)
-        elif submodel == 'o2i' : return (np.maximum(-0.5,
-                        -2.1*d_2d/1000.-0.01*(h_ut-1.5)+0.9),
-                                       0.49)
+        fc = max(fc, 6.)
+        if submodel == 'los': return (np.maximum(-0.5,
+            -2.1*d_2d/1000.-0.01*(h_ut-1.5)+0.75),
+                           0.40)
+        elif submodel in ['nlos', 'o2i']: return (np.maximum(-0.5,
+            -2.1*d_2d/1000.-0.01*(h_ut-1.5)+0.9),
+                           0.49)
 
 
 ######## LSP cross-correlations
@@ -548,18 +535,20 @@ def corr_dist_ds(model, submodel):
     : float
         Correlation distance
     """
-    if model == 'umi':
-        if submodel == 'los' : return 7
-        elif submodel == 'nlos' : return 10
-        elif submodel == 'o2i' : return 10
+    if model == 'rma':
+        if submodel == 'los':
+            if submodel == 'los' : return 50
+        elif submodel in ['nlos', 'o2i']:
+            return 36
     elif model == 'uma':
         if submodel == 'los' : return 30
         elif submodel == 'nlos' : return 40
         elif submodel == 'o2i' : return 10
-    elif model == 'rma':
-        if submodel == 'los' : return 50
-        elif submodel == 'nlos' : return 36
-        elif submodel == 'o2i' : return 36
+    elif model == 'umi':
+        if submodel == 'los':
+            if submodel == 'los' : return 7
+        elif submodel in ['nlos', 'o2i']:
+            return 10
 
 def corr_dist_asd(model, submodel):
     r"""
@@ -578,18 +567,19 @@ def corr_dist_asd(model, submodel):
     : float
         Correlation distance
     """
-    if model == 'umi':
-        if submodel == 'los' : return 8
-        elif submodel == 'nlos' : return 10
-        elif submodel == 'o2i' : return 11
+    if model == 'rma':
+        if submodel == 'los':
+            if submodel == 'los' : return 25
+        elif submodel in ['nlos', 'o2i']:
+            return 30
     elif model == 'uma':
         if submodel == 'los' : return 18
         elif submodel == 'nlos' : return 50
         elif submodel == 'o2i' : return 11
-    elif model == 'rma':
-        if submodel == 'los' : return 25
-        elif submodel == 'nlos' : return 30
-        elif submodel == 'o2i' : return 30
+    elif model == 'umi':
+        if submodel == 'los' : return 8
+        elif submodel == 'nlos' : return 10
+        elif submodel == 'o2i' : return 11
 
 def corr_dist_asa(model, submodel):
     r"""
@@ -608,18 +598,19 @@ def corr_dist_asa(model, submodel):
     : float
         Correlation distance
     """
-    if model == 'umi':
-        if submodel == 'los' : return 8
-        elif submodel == 'nlos' : return 9
-        elif submodel == 'o2i' : return 17
+    if model == 'rma':
+        if submodel == 'los':
+            if submodel == 'los' : return 35
+        elif submodel in ['nlos', 'o2i']:
+            return 40
     elif model == 'uma':
         if submodel == 'los' : return 15
         elif submodel == 'nlos' : return 50
         elif submodel == 'o2i' : return 11
-    elif model == 'rma':
-        if submodel == 'los' : return 35
-        elif submodel == 'nlos' : return 40
-        elif submodel == 'o2i' : return 40
+    elif model == 'umi':
+        if submodel == 'los' : return 8
+        elif submodel == 'nlos' : return 9
+        elif submodel == 'o2i' : return 17
 
 def corr_dist_sf(model, submodel):
     r"""
@@ -638,18 +629,19 @@ def corr_dist_sf(model, submodel):
     : float
         Correlation distance
     """
-    if model == 'umi':
-        if submodel == 'los' : return 10
-        elif submodel == 'nlos' : return 13
-        elif submodel == 'o2i' : return 7
+    if model == 'rma':
+        if submodel == 'los':
+            if submodel == 'los' : return 37
+        elif submodel in ['nlos', 'o2i']:
+            return 120
     elif model == 'uma':
         if submodel == 'los' : return 37
         elif submodel == 'nlos' : return 50
         elif submodel == 'o2i' : return 7
-    elif model == 'rma':
-        if submodel == 'los' : return 37
-        elif submodel == 'nlos' : return 120
-        elif submodel == 'o2i' : return 120
+    elif model == 'umi':
+        if submodel == 'los' : return 10
+        elif submodel == 'nlos' : return 13
+        elif submodel == 'o2i' : return 7
 
 def corr_dist_k(model, submodel):
     r"""
@@ -692,18 +684,19 @@ def corr_dist_zsa(model, submodel):
     : float
         Correlation distance
     """
-    if model == 'umi':
-        if submodel == 'los' : return 12
-        elif submodel == 'nlos' : return 10
-        elif submodel == 'o2i' : return 25
+    if model == 'rma':
+        if submodel == 'los':
+            if submodel == 'los' : return 15
+        elif submodel in ['nlos', 'o2i']:
+            return 50
     elif model == 'uma':
         if submodel == 'los' : return 15
         elif submodel == 'nlos' : return 50
         elif submodel == 'o2i' : return 25
-    elif model == 'rma':
-        if submodel == 'los' : return 15
-        elif submodel == 'nlos' : return 50
-        elif submodel == 'o2i' : return 50
+    elif model == 'umi':
+        if submodel == 'los' : return 12
+        elif submodel == 'nlos' : return 10
+        elif submodel == 'o2i' : return 25
 
 def corr_dist_zsd(model, submodel):
     r"""
@@ -722,18 +715,19 @@ def corr_dist_zsd(model, submodel):
     : float
         Correlation distance
     """
-    if model == 'umi':
-        if submodel == 'los' : return 12
-        elif submodel == 'nlos' : return 10
-        elif submodel == 'o2i' : return 25
+    if model == 'rma':
+        if submodel == 'los':
+            if submodel == 'los' : return 15
+        elif submodel in ['nlos', 'o2i']:
+            return 50
     elif model == 'uma':
         if submodel == 'los' : return 15
         elif submodel == 'nlos' : return 50
         elif submodel == 'o2i' : return 25
-    elif model == 'rma':
-        if submodel == 'los' : return 15
-        elif submodel == 'nlos' : return 50
-        elif submodel == 'o2i' : return 50
+    elif model == 'umi':
+        if submodel == 'los' : return 12
+        elif submodel == 'nlos' : return 10
+        elif submodel == 'o2i' : return 25
 
 ####### Pathlosses
 
@@ -775,9 +769,8 @@ def rma_los_pathloss(d_2d, d_3d, fc, h_bs, h_ut, h, w):
                + np.minimum(0.03*np.power(h,1.72),10.0)*np.log10(d_)
                - np.minimum(0.044*np.power(h,1.72),14.77)+0.002*np.log10(h)*d_)
         return p
-    if d_2d < dbp:
-        return pl1(d_3d)
-    return pl1(dbp) + 40.0*np.log10(d_3d/dbp)
+
+    return pl1(d_3d) if d_2d < dbp else pl1(dbp) + 40.0*np.log10(d_3d/dbp)
 
 def rma_nlos_pathloss(d_2d, d_3d, fc, h_bs, h_ut, h, w):
     r"""
@@ -884,8 +877,7 @@ def umi_los_pathloss(d_2d, d_3d, fc, h_bs, h_ut):
     pl1 = 32.4 + 21.0*np.log10(d_3d) + 20.0*np.log10(fc/1e9)
     pl2 = 32.4 + 40.0*np.log10(d_3d) + 20.0*np.log10(fc/1e9)\
         - 9.5*np.log10(np.square(dbp) + np.square(h_bs - h_ut))
-    pl_los = np.where(np.less(d_2d, dbp), pl1, pl2)
-    return pl_los
+    return np.where(np.less(d_2d, dbp), pl1, pl2)
 
 def umi_nlos_pathloss(d_2d, d_3d, fc, h_bs, h_ut):
     r"""
@@ -948,11 +940,11 @@ def umi_o2i_pathloss(d_2d, d_3d, fc, h_bs, h_ut, o2i_model):
     if o2i_model == 'low':
         pltw = 5.0-10.0*np.log10(0.3*np.power(10.0, (-2.-0.2*fc/1e9)/10.0)\
             + 0.7*np.power(10.0, (-5.-4.*fc/1e9)/10.0))
-        return umi_nlos_pathloss(d_2d, d_3d, fc, h_bs, h_ut) + pltw + 0.5*12.5
     else:
         pltw = 5.0-10.0*np.log10(0.7*np.power(10.0, (-23.-0.3*fc/1e9)/10.0)\
             + 0.3*np.power(10.0, (-5.-4.*fc/1e9)/10.0))
-        return umi_nlos_pathloss(d_2d, d_3d, fc, h_bs, h_ut) + pltw + 0.5*12.5
+
+    return umi_nlos_pathloss(d_2d, d_3d, fc, h_bs, h_ut) + pltw + 0.5*12.5
 
 def uma_los_pathloss(d_2d, d_3d, fc, h_bs, h_ut):
     r"""
@@ -985,8 +977,7 @@ def uma_los_pathloss(d_2d, d_3d, fc, h_bs, h_ut):
     pl1 = 28. + 22.0*np.log10(d_3d) + 20.0*np.log10(fc/1e9)
     pl2 = 28 + 40.0*np.log10(d_3d) + 20.0*np.log10(fc/1e9) -\
         9*np.log10(np.square(dbp) + np.square(h_bs - h_ut))
-    pl_los = np.where(np.less(d_2d, dbp), pl1, pl2)
-    return pl_los
+    return np.where(np.less(d_2d, dbp), pl1, pl2)
 
 def uma_nlos_pathloss(d_2d, d_3d, fc, h_bs, h_ut):
     r"""
@@ -1052,11 +1043,11 @@ def uma_o2i_pathloss(d_2d, d_3d, fc, h_bs, h_ut, o2i_model):
     if o2i_model == 'low':
         pltw = 5.0-10.0*np.log10(0.3*np.power(10.0, (-2.-0.2*fc/1e9)/10.0)\
             + 0.7*np.power(10.0, (-5.-4.*fc/1e9)/10.0))
-        return uma_nlos_pathloss(d_2d, d_3d, fc, h_bs, h_ut) + pltw + 0.5*12.5
     else:
         pltw = 5.0-10.0*np.log10(0.7*np.power(10.0, (-23.-0.3*fc/1e9)/10.0)\
             + 0.3*np.power(10.0, (-5.-4.*fc/1e9)/10.0))
-        return uma_nlos_pathloss(d_2d, d_3d, fc, h_bs, h_ut) + pltw + 0.5*12.5
+
+    return uma_nlos_pathloss(d_2d, d_3d, fc, h_bs, h_ut) + pltw + 0.5*12.5
 
 def pathloss(model, submodel, *args):
     r"""
@@ -1124,24 +1115,11 @@ def pathloss_std(model, submodel, o2i_model=None):
     : float
         Pathloss standard deviation [dB]
     """
-    if model == 'rma':
-        if submodel == 'los':
-            return 0.0
-        elif submodel == 'nlos':
-            return 0.0
-        elif submodel == 'o2i':
-            return np.sqrt((4.4**2)+0.25/12*(10**2))
-    elif model == 'umi':
-        if submodel == 'los':
-            return 0.0
-        elif submodel == 'nlos':
-            return 0.0
-        elif submodel == 'o2i':
-            if o2i_model == 'low':
-                return np.sqrt((4.4**2)+0.25/12*(25**2))
-            elif o2i_model == 'high':
-                return np.sqrt((6.5**2)+0.25/12*(25**2))
-    elif model == 'uma':
+    if model == 'rma' and submodel in ['los', 'nlos']:
+        return 0.0
+    elif model == 'rma' and submodel == 'o2i':
+        return np.sqrt((4.4**2)+0.25/12*(10**2))
+    elif model != 'rma' and model in ['umi', 'uma']:
         if submodel == 'los':
             return 0.0
         elif submodel == 'nlos':
@@ -1183,23 +1161,18 @@ def zod_offset(model, submodel, fc, d_2d, h_ut):
     if model == 'umi':
         if submodel == 'los':
             return 0.0
-        elif submodel == 'nlos':
-            return -np.power(10, -1.5*np.log10(np.maximum(10, d_2d))+3.3)
-        elif submodel == 'o2i':
+        elif submodel in ['nlos', 'o2i']:
             return -np.power(10, -1.5*np.log10(np.maximum(10, d_2d))+3.3)
     elif model == 'uma':
         fc = fc/1e9
-        if fc < 6. : fc = 6.
+        fc = max(fc, 6.)
         a = 0.208*np.log10(fc) - 0.782
         b = 25.
         c = -0.13*np.log10(fc) + 2.03
         e = 7.66*np.log10(fc) - 5.96
         if submodel == 'los':
             return 0.0
-        elif submodel == 'nlos':
-            return e - np.power(10, a*np.log10(np.maximum(b, d_2d)) + c
-                                - 0.07*(h_ut -1.5))
-        elif submodel == 'o2i':
+        elif submodel in ['nlos', 'o2i']:
             return e - np.power(10, a*np.log10(np.maximum(b, d_2d)) + c
                                 - 0.07*(h_ut -1.5))
     elif model == 'rma':
@@ -2379,11 +2352,13 @@ CDL_ZOA = {
                     78.3])
 }
 
-CDL_XPR = { 'A' : np.power(10.0, 10.0/10.0),
-            'B' : np.power(10.0, 8.0/10.0),
-            'C' : np.power(10.0, 7.0/10.0),
-            'D' : np.power(10.0, 11.0/10.0),
-            'E' : np.power(10.0, 8.0/10.0)}
+CDL_XPR = {
+    'A': np.power(10.0, 1.0),
+    'B': np.power(10.0, 8.0 / 10.0),
+    'C': np.power(10.0, 7.0 / 10.0),
+    'D': np.power(10.0, 11.0 / 10.0),
+    'E': np.power(10.0, 8.0 / 10.0),
+}
 
 def cdl_aod(model):
     C_AOD = {   'A' : 5.0,

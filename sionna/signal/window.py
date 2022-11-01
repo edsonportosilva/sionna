@@ -252,7 +252,7 @@ class CustomWindow(Window):
 
         if coefficients is not None:
             assert len(coefficients) == length,\
-                "specified `length` does not match the one of `coefficients`"
+                    "specified `length` does not match the one of `coefficients`"
             self._c = tf.constant(coefficients, dtype=dtype)
         else:
             self._c = tf.keras.initializers.RandomNormal()([length], dtype)

@@ -87,21 +87,21 @@ class ConvEncoder(Layer):
 
         if gen_poly is not None:
             assert all(isinstance(poly, str) for poly in gen_poly), \
-                "Each element of gen_poly must be a string."
+                    "Each element of gen_poly must be a string."
             assert all(len(poly)==len(gen_poly[0]) for poly in gen_poly), \
-                "Each polynomial must be of same length."
+                    "Each polynomial must be of same length."
             assert all(all(
                 char in ['0','1'] for char in poly) for poly in gen_poly),\
-                "Each Polynomial must be a string of 0/1 s."
+                    "Each Polynomial must be a string of 0/1 s."
             self._gen_poly = gen_poly
         else:
             valid_rates = (1/2, 1/3)
             valid_constraint_length = (3, 4, 5, 6, 7, 8)
 
             assert constraint_length in valid_constraint_length, \
-                "Constraint length must be between 3 and 8."
+                    "Constraint length must be between 3 and 8."
             assert rate in valid_rates, \
-                "Rate must be 1/3 or 1/2."
+                    "Rate must be 1/3 or 1/2."
             self._gen_poly = polynomial_selector(rate, constraint_length)
 
         self._coderate = 1/len(self.gen_poly)
@@ -200,7 +200,5 @@ class ConvEncoder(Layer):
 
         cw = tf.concat(tf.unstack(ta.stack()),axis=1)
         cw = tf.cast(cw, self.output_dtype)
-        cw_reshaped = tf.reshape(cw, output_shape)
-
-        return cw_reshaped
+        return tf.reshape(cw, output_shape)
 

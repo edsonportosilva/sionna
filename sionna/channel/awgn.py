@@ -83,7 +83,4 @@ class AWGN(Layer):
         no = tf.cast(no, self._real_dtype)
         noise *= tf.cast(tf.sqrt(no), noise.dtype)
 
-        # Add noise to input
-        y = x + noise
-
-        return y
+        return x + noise

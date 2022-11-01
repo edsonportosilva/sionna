@@ -202,7 +202,7 @@ class MaximumLikelihoodDetector(Layer):
         super().__init__(dtype=dtype, **kwargs)
 
         assert dtype in [tf.complex64, tf.complex128],\
-            "dtype must be tf.complex64 or tf.complex128"
+                "dtype must be tf.complex64 or tf.complex128"
 
         assert output in ("bit", "symbol"), "Unknown output"
 
@@ -366,7 +366,4 @@ class MaximumLikelihoodDetector(Layer):
             # Compute LLRs or hard decisions
             return self._logits2llr(logits)
         else:
-            if self._hard_out:
-                return tf.argmax(logits, axis=-1)
-            else:
-                return logits
+            return tf.argmax(logits, axis=-1) if self._hard_out else logits

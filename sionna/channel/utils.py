@@ -479,11 +479,9 @@ def drop_uts_in_sector(batch_size, num_ut, min_bs_ut_dist, isd,
     side = 2.*side+1.
     alpha = alpha_half + side*PI/6.
 
-    # Set UT location in X-Y coordinate system
-    ut_loc = tf.stack([distance*tf.math.cos(alpha),
-                       distance*tf.math.sin(alpha)], axis=-1)
-
-    return ut_loc
+    return tf.stack(
+        [distance * tf.math.cos(alpha), distance * tf.math.sin(alpha)], axis=-1
+    )
 
 def set_3gpp_scenario_parameters(   scenario,
                                     min_bs_ut_dist=None,
@@ -707,10 +705,7 @@ def relocate_uts(ut_loc, sector_id, cell_loc):
     ut_loc = tf.expand_dims(ut_loc, axis=-1)
     ut_loc_rotated = tf.squeeze(rotation_matrix@ut_loc, axis=-1)
 
-    # Translate to the BS location
-    ut_loc_rotated_translated = ut_loc_rotated + cell_loc
-
-    return ut_loc_rotated_translated
+    return ut_loc_rotated + cell_loc
 
 def generate_uts_topology(  batch_size,
                             num_ut,
@@ -1333,10 +1328,7 @@ def exp_corr_mat(a, n, dtype=tf.complex64):
     # Create Toeplitz operator
     operator = tf.linalg.LinearOperatorToeplitz(col, row)
 
-    # Generate dense tensor from operator
-    r = operator.to_dense()
-
-    return r
+    return operator.to_dense()
 
 def one_ring_corr_mat(phi_deg, num_ant, d_h=0.5, sigma_phi_deg=15,
                       dtype=tf.complex64):
@@ -1414,7 +1406,4 @@ def one_ring_corr_mat(phi_deg, num_ant, d_h=0.5, sigma_phi_deg=15,
     # Create Toeplitz operator
     operator = tf.linalg.LinearOperatorToeplitz(col, row)
 
-    # Generate dense tensor from operator
-    r = operator.to_dense()
-
-    return r
+    return operator.to_dense()

@@ -210,8 +210,7 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
         dim_ind = np.arange(len(R.shape))
         dim_ind = np.concatenate([dim_ind[:-2], [dim_ind[-1]], [dim_ind[-2]]],
                                     axis=0)
-        R_inv = np.transpose(R, dim_ind)
-        return R_inv
+        return np.transpose(R, dim_ind)
 
     def test_reverse_rotation_matrix(self):
         """Test 3GPP channel coefficient calculation: Reverse rotation matrix"""
@@ -281,8 +280,8 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
         c = orientations[...,2]
 
         real = np.sin(c)*np.cos(theta)*np.sin(phi-a)\
-            + np.cos(c)*(np.cos(b)*np.sin(theta)\
-                -np.sin(b)*np.cos(theta)*np.cos(phi-a))
+                + np.cos(c)*(np.cos(b)*np.sin(theta)\
+                    -np.sin(b)*np.cos(theta)*np.cos(phi-a))
         imag = np.sin(c)*np.cos(phi-a) + np.sin(b)*np.cos(c)*np.sin(phi-a)
         return np.angle(real+1j*imag)
 
@@ -297,8 +296,7 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
         mat[...,1,0] = np.sin(psi)
         mat[...,1,1] = np.cos(psi)
 
-        F = mat@np.expand_dims(F_prime, axis=-1)
-        return F
+        return mat@np.expand_dims(F_prime, axis=-1)
 
     def test_l2g_response(self):
         """Test 3GPP channel coefficient calculation: L2G antenna response"""
@@ -320,14 +318,12 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
 
     def rot_pos_ref(self, orientations, positions):
         R = self.forward_rotation_matrix_ref(orientations)
-        pos_r = R@positions
-        return pos_r
+        return R@positions
 
     def rot_pos(self, orientations, positions):
         """Reference implementation: Rotate according to an orientation"""
         R = self.forward_rotation_matrix_ref(orientations)
-        pos_r = R@positions
-        return pos_r
+        return R@positions
 
     def test_rot_pos(self):
         """Test 3GPP channel coefficient calculation: Rotate position according
@@ -355,10 +351,7 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
 
         # Antenna loc in GCS relative to BS location
         tx_orientations = np.expand_dims(tx_orientations, axis=2)
-        ant_loc_gcs = np.squeeze(self.rot_pos_ref(tx_orientations, ant_loc_lcs),
-                                 axis=-1)
-
-        return ant_loc_gcs
+        return np.squeeze(self.rot_pos_ref(tx_orientations, ant_loc_lcs), axis=-1)
 
     def test_step_11_get_tx_antenna_positions(self):
         """Test 3GPP channel coefficient calculation: Positions of the TX array
@@ -382,10 +375,7 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
 
         # Antenna loc in GCS relative to UT location
         rx_orientations = np.expand_dims(rx_orientations, axis=2)
-        ant_loc_gcs = np.squeeze(self.rot_pos_ref(rx_orientations, ant_loc_lcs),
-                                    axis=-1)
-
-        return ant_loc_gcs
+        return np.squeeze(self.rot_pos_ref(rx_orientations, ant_loc_lcs), axis=-1)
 
     def test_step_11_get_rx_antenna_positions(self):
         """Test 3GPP channel coefficient calculation: Positions of the RX array
@@ -516,8 +506,7 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
         # Computing H_field
         F_tx = np.expand_dims(F_tx, axis=-3)
         F_rx = np.expand_dims(F_rx, axis=-2)
-        H_field = np.sum(F_tx*F_rx, axis=-1)
-        return H_field
+        return np.sum(F_tx*F_rx, axis=-1)
 
     def test_step_11_field_matrix(self):
         """Test 3GPP channel coefficient calculation:
@@ -570,9 +559,7 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
 
         tx_offset = np.expand_dims(tx_offset, -2)
         rx_offset = np.expand_dims(rx_offset, -1)
-        antenna_offset = np.exp(1j*2*np.pi*(tx_offset+rx_offset)/lambda_0)
-
-        return antenna_offset
+        return np.exp(1j*2*np.pi*(tx_offset+rx_offset)/lambda_0)
 
     def test_step_11_array_offsets(self):
         """Test 3GPP channel coefficient calculation: Array offset matrix"""
@@ -613,9 +600,7 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
         exponent = np.sum(r_hat_rx*velocities, axis=-1, keepdims=True)
         exponent = exponent/lambda_0
         exponent = 2*np.pi*exponent*t
-        H_doppler = np.exp(1j*exponent)
-
-        return H_doppler
+        return np.exp(1j*exponent)
 
     def test_step_11_doppler_matrix(self):
         """Test 3GPP channel coefficient calculation: Doppler matrix"""
@@ -806,8 +791,7 @@ class TestChannelCoefficientsGenerator(unittest.TestCase):
         H_delay = np.expand_dims(np.expand_dims(np.expand_dims(
                 np.expand_dims(H_delay, axis=3), axis=4), axis=5), axis=6)
 
-        H_los = H_field*H_array*H_doppler*H_delay
-        return H_los
+        return H_field*H_array*H_doppler*H_delay
 
     def test_step11_los(self):
         """Test 3GPP channel coefficient calculation: LoS channel matrix"""

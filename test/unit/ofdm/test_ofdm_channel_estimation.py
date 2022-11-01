@@ -82,8 +82,7 @@ def time_int(h, time_avg=False):
         h[pilot_ind] = hh
 
     if len(pilot_ind)==1:
-        h_int = np.repeat(h[pilot_ind], [h.shape[0]], axis=0)
-        return h_int
+        return np.repeat(h[pilot_ind], [h.shape[0]], axis=0)
     elif len(pilot_ind)>1:
         x0 = 0
         x1 = 1
@@ -95,8 +94,9 @@ def time_int(h, time_avg=False):
             if a==pilot_ind[x1] and x1<len(pilot_ind)-1:
                 x0 = x1
                 x1 += 1
-    h_int = (x-x_0)*np.divide(y_1-y_0, x_1-x_0, out=np.zeros_like(h), where=x_1-x_0!=0) + y_0
-    return h_int 
+    return (x - x_0) * np.divide(
+        y_1 - y_0, x_1 - x_0, out=np.zeros_like(h), where=x_1 - x_0 != 0
+    ) + y_0 
 
 def linear_int(h, i, j, time_avg=False):
     """Linear interpolation on a 2D resource grid
@@ -184,7 +184,7 @@ def check_linear_interpolation(self, pilot_pattern, time_avg=False, mode="eager"
     elif mode=="xla":
         x_rg, h_freq, h_hat_lin = fun_xla()
 
-    for tx in range(0, num_ut):
+    for tx in range(num_ut):
         # Get non-zero pilot indices
         i, j = np.where(np.abs(x_rg[0, tx, 0]))
         h = h_freq[0,0,0,tx,0].numpy()

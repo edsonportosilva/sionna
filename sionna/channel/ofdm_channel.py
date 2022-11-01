@@ -138,7 +138,4 @@ class OFDMChannel(Layer):
         else:
             y = self._apply_channel([x, h_freq])
 
-        if self._return_channel:
-            return y, h_freq
-        else:
-            return y
+        return (y, h_freq) if self._return_channel else y

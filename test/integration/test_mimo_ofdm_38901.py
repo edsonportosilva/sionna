@@ -47,20 +47,20 @@ class Model(tf.keras.Model):
         super().__init__()
         self._scenario = scenario
         self._perfect_csi = perfect_csi
-        
+
         # Internally set parameters
         self._carrier_frequency = 3.5e9
         self._fft_size = 128
         self._subcarrier_spacing = 30e3
         self._num_ofdm_symbols = 14
         self._cyclic_prefix_length = 20
-        self._pilot_ofdm_symbol_indices = [2, 11]      
+        self._pilot_ofdm_symbol_indices = [2, 11]
         self._num_bs_ant = 8
         self._num_ut = 4
         self._num_ut_ant = 1
-        self._num_bits_per_symbol = 2 
+        self._num_bits_per_symbol = 2
         self._coderate = 0.5
-    
+
         # Create an RX-TX association matrix
         # rx_tx_association[i,j]=1 means that receiver i gets at least one stream
         # from transmitter j. Depending on the transmission direction (uplink or downlink),
@@ -71,7 +71,7 @@ class Model(tf.keras.Model):
         self._num_tx = self._num_ut
         self._num_streams_per_tx = self._num_ut_ant
 
-            
+
         # Setup an OFDM Resource Grid
         self._rg = ResourceGrid(num_ofdm_symbols=self._num_ofdm_symbols,
                                 fft_size=self._fft_size,
@@ -81,10 +81,10 @@ class Model(tf.keras.Model):
                                 cyclic_prefix_length=self._cyclic_prefix_length,
                                 pilot_pattern="kronecker",
                                 pilot_ofdm_symbol_indices=self._pilot_ofdm_symbol_indices)
-             
+
         # Setup StreamManagement
         self._sm = StreamManagement(self._rx_tx_association, self._num_streams_per_tx)
-               
+
         # Configure antenna arrays
         self._ut_array = AntennaArray(
                                  num_rows=1,
@@ -93,14 +93,17 @@ class Model(tf.keras.Model):
                                  polarization_type="V",
                                  antenna_pattern="omni",
                                  carrier_frequency=self._carrier_frequency)
-        
-        self._bs_array = AntennaArray(num_rows=1,
-                                      num_cols=int(self._num_bs_ant/2),
-                                      polarization="dual",
-                                      polarization_type="cross",
-                                      antenna_pattern="38.901",
-                                      carrier_frequency=self._carrier_frequency)
-        
+
+        self._bs_array = AntennaArray(
+            num_rows=1,
+            num_cols=self._num_bs_ant // 2,
+            polarization="dual",
+            polarization_type="cross",
+            antenna_pattern="38.901",
+            carrier_frequency=self._carrier_frequency,
+        )
+
+
         # Configure the channel model
         if self._scenario == "umi":
             self._channel_model = UMi(carrier_frequency=self._carrier_frequency,
@@ -125,21 +128,21 @@ class Model(tf.keras.Model):
                                       direction="uplink",
                                       enable_pathloss=False,
                                       enable_shadow_fading=False)
-            
+
         # Instantiate other building blocks
         self._binary_source = BinarySource()
         self._qam_source = QAMSource(self._num_bits_per_symbol)
-        
+
         self._n = int(self._rg.num_data_symbols*self._num_bits_per_symbol) # Number of coded bits
         self._k = int(self._n*self._coderate)                              # Number of information bits
         self._encoder = LDPC5GEncoder(self._k, self._n)
         self._decoder = LDPC5GDecoder(self._encoder)
         self._mapper = Mapper("qam", self._num_bits_per_symbol)
         self._rg_mapper = ResourceGridMapper(self._rg)
-        
+
         self._ofdm_channel = OFDMChannel(self._channel_model, self._rg, add_awgn=True,
                                          normalize_channel=True, return_channel=True)
-       
+
         self._remove_nulled_subcarriers = RemoveNulledSubcarriers(self._rg)
         self._ls_est = LSChannelEstimator(self._rg, interpolation_type="nn")
         self._lmmse_equ = LMMSEEqualizer(self._rg, self._sm)

@@ -36,20 +36,21 @@ class TestWindow(unittest.TestCase):
                          (tf.complex64, tf.float32) : tf.complex64,
                          (tf.float64, tf.float64) : tf.float64,
                          (tf.complex128, tf.float64) : tf.complex128}
-        for dtypes in expected_type:
+        for dtypes, value in expected_type.items():
             inp_dtype = dtypes[0]
             win_dtype = dtypes[1]
-            if inp_dtype.is_complex:
-                inp = tf.complex(tf.random.uniform([64, 100],
-                                    dtype=inp_dtype.real_dtype),
-                                 tf.random.uniform([64, 100],
-                                    dtype=inp_dtype.real_dtype))
-            else:
-                inp = tf.random.uniform([64, 100], dtype=inp_dtype)
+            inp = (
+                tf.complex(
+                    tf.random.uniform([64, 100], dtype=inp_dtype.real_dtype),
+                    tf.random.uniform([64, 100], dtype=inp_dtype.real_dtype),
+                )
+                if inp_dtype.is_complex
+                else tf.random.uniform([64, 100], dtype=inp_dtype)
+            )
 
             window = CustomWindow(length=100, dtype=win_dtype)
             out = window(inp)
-            self.assertEqual(out.dtype, expected_type[dtypes])
+            self.assertEqual(out.dtype, value)
 
     def test_shape(self):
         """Test the output shape"""

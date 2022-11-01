@@ -70,7 +70,7 @@ class TestConvEncoding(unittest.TestCase):
             for mu in constraint_length_valid:
                 with self.assertRaises(AssertionError):
                     enc = ConvEncoder(rate=rate, constraint_length= mu)
-        
+
         gmat = [['101', '111', '000'], ['000', '010', '011']]
         with self.assertRaises(AssertionError):
             enc = ConvEncoder(gen_poly=gmat)
@@ -128,7 +128,7 @@ class TestConvEncoding(unittest.TestCase):
         # call twice to see that bs can change
         b2 = source([bs+1, k])
         model(b2)
-        
+
         model.summary()
 
         source = BinarySource()
@@ -189,7 +189,7 @@ class TestConvEncoding(unittest.TestCase):
             cref = np.load(ref_path + gen_str + 'ref_x.npy')
             c = enc(u).numpy()
             self.assertTrue(np.array_equal(c, cref))
-            
+
             if idx in [0, 2]:
                 enc = ConvEncoder(rate=rs[idx], constraint_length=mus[idx])            
                 c = enc(u).numpy()

@@ -113,7 +113,7 @@ class PolarEncoder(Layer):
         # generate info positions
         self._info_pos = np.setdiff1d(np.arange(self._n), frozen_pos)
         assert self._k==len(self._info_pos), "Internal error: invalid " \
-                                              "info_pos generated."
+                                                  "info_pos generated."
 
         self._check_input = True # check input for bin. values during first call
 
@@ -254,7 +254,7 @@ class PolarEncoder(Layer):
 
         # restore original shape
         input_shape_list = input_shape.as_list()
-        output_shape = input_shape_list[0:-1] + [self._n]
+        output_shape = input_shape_list[:-1] + [self._n]
         output_shape[0] = -1 # to support dynamic shapes
         c_reshaped = tf.reshape(c_out, output_shape)
 
@@ -461,10 +461,7 @@ class Polar5GEncoder(PolarEncoder):
         ind_k = 0
         for ind_i in range(t):
             for ind_j in range(t-ind_i):
-                if ind_k < n:
-                    v[ind_i, ind_j] = c[ind_k]
-                else:
-                    v[ind_i, ind_j] = np.nan # NULL
+                v[ind_i, ind_j] = c[ind_k] if ind_k < n else np.nan
                 # Store nothing otherwise
                 ind_k += 1
         ind_k = 0
@@ -506,13 +503,13 @@ class Polar5GEncoder(PolarEncoder):
 
         assert n_target >=k_target, "n must be larger or equal k."
         assert k_target >= 12, \
-                        "k<12 is not supported by the 5G Polar coding scheme."
+                            "k<12 is not supported by the 5G Polar coding scheme."
         assert n_target >= 18, \
-                        "n<18 is not supported by the 5G Polar coding scheme."
+                            "n<18 is not supported by the 5G Polar coding scheme."
         assert k_target <= 1013, \
-            "k too large - no codeword segmentation supported at the moment."
+                "k too large - no codeword segmentation supported at the moment."
         assert n_target <= 1088, \
-            "n too large - no codeword segmentation supported at the moment."
+                "n too large - no codeword segmentation supported at the moment."
 
         # Select CRC polynomials (see Sec. 6.3.1.2.1 for UL)
         if 12<=k_target<=19:
@@ -523,8 +520,8 @@ class Polar5GEncoder(PolarEncoder):
             k_crc = 11
         else:
             raise ValueError("k_target<12 is not supported in 5G NR; please " \
-                "use 'channel coding of small block lengths' scheme from " \
-                "Sec. 5.3.3 in 3GPP 38.212 instead.")
+                    "use 'channel coding of small block lengths' scheme from " \
+                    "Sec. 5.3.3 in 3GPP 38.212 instead.")
 
         # PC bit for k_target = 12-19 bits (see Sec. 6.3.1.3.1 for UL)
         n_pc = 0
@@ -533,19 +530,15 @@ class Polar5GEncoder(PolarEncoder):
             #n_pc = 3
             n_pc = 0 # Currently deactivated
             print("Warning: For 12<=k<=20 additional 3 parity-check bits " \
-                  "are defined in 38.212. They are currently not " \
-                  "implemented by this encoder and, thus, ignored.")
-            if n_target-k_target>175:
-                #n_pc_wm = 1
-                pass
-
+                      "are defined in 38.212. They are currently not " \
+                      "implemented by this encoder and, thus, ignored.")
         # No input interleaving for uplink needed
 
         # Calculate Polar payload length (CRC bits are treated as info bits)
         k_polar = k_target + k_crc + n_pc
 
         assert k_polar <= n_target, "UE is not expected to be configured " \
-                                    "with k_polar + k_crc + n_pc > n_target."
+                                        "with k_polar + k_crc + n_pc > n_target."
 
         # Select polar mother code length n_polar
         n_min = 5
@@ -569,25 +562,20 @@ class Polar5GEncoder(PolarEncoder):
                     print("Using puncturing for rate-matching.")
                 n_int =  32 * np.ceil((n_polar-n_target) / 32)
                 int_pattern = self.subblock_interleaving(np.arange(n_int))
-                for i in range(n_polar-n_target):
-                    # Freeze additional bits
-                    prefrozen_pos.append(int(int_pattern[i]))
+                prefrozen_pos.extend(int(int_pattern[i]) for i in range(n_polar-n_target))
                 if n_target >= 3*n_polar/4:
                     t = int(np.ceil(3/4*n_polar - n_target/2) - 1)
                 else:
                     t = int(np.ceil(9/16*n_polar - n_target/4) - 1)
                 # Extra freezing
-                for i in range(t):
-                    prefrozen_pos.append(i)
+                prefrozen_pos.extend(iter(range(t)))
             else:
                 # Shortening ("through" sub-block interleaver)
                 if self._verbose:
                     print("Using shortening for rate-matching.")
                 n_int =  32 * np.ceil((n_polar) / 32)
                 int_pattern = self.subblock_interleaving(np.arange(n_int))
-                for i in range(n_target, n_polar):
-                    prefrozen_pos.append(int_pattern[i])
-
+                prefrozen_pos.extend(int_pattern[i] for i in range(n_target, n_polar))
         # Remove duplicates
         prefrozen_pos = np.unique(prefrozen_pos)
 
@@ -600,10 +588,7 @@ class Polar5GEncoder(PolarEncoder):
         info_cand = np.setdiff1d(ch_ranking, prefrozen_pos, assume_unique=True)
 
         # Identify k_polar most reliable positions from candidate positions
-        info_pos = []
-        for i in range(k_polar):
-            info_pos.append(info_cand[-i-1])
-
+        info_pos = [info_cand[-i-1] for i in range(k_polar)]
         # Sort and create frozen positions for n_polar indices (no shortening)
         info_pos = np.sort(info_pos).astype(int)
         frozen_pos = np.setdiff1d(np.arange(n_polar),
@@ -622,15 +607,14 @@ class Polar5GEncoder(PolarEncoder):
                 print("Using repetition coding for rate-matching")
             for ind in range(n_target):
                 idx_c_matched[ind] = c_int[np.mod(ind, n_polar)]
+        elif k_polar/n_target <= 7/16:
+            # Puncturing
+            for ind in range(n_target):
+                idx_c_matched[ind] = c_int[ind+n_polar-n_target]
         else:
-            if k_polar/n_target <= 7/16:
-                # Puncturing
-                for ind in range(n_target):
-                    idx_c_matched[ind] = c_int[ind+n_polar-n_target]
-            else:
-                # Shortening
-                for ind in range(n_target):
-                    idx_c_matched[ind] = c_int[ind]
+            # Shortening
+            for ind in range(n_target):
+                idx_c_matched[ind] = c_int[ind]
 
         ind_channel_int = self.channel_interleaver(np.arange(n_target))
 
@@ -641,9 +625,9 @@ class Polar5GEncoder(PolarEncoder):
 
         if self._verbose:
             print("Code parameters after rate-matching: " \
-                  f"k = {k_target}, n = {n_target}")
+                      f"k = {k_target}, n = {n_target}")
             print(f"Polar mother code: k_polar = {k_polar}, " \
-                  f"n_polar = {n_polar}")
+                      f"n_polar = {n_polar}")
             print("Using", crc_pol)
             print("Frozen positions: ", frozen_pos)
 
@@ -701,8 +685,6 @@ class Polar5GEncoder(PolarEncoder):
 
         # Restore original shape
         input_shape_list = input_shape.as_list()
-        output_shape = input_shape_list[0:-1] + [self._n_target]
+        output_shape = input_shape_list[:-1] + [self._n_target]
         output_shape[0] = -1 # To support dynamic shapes
-        c_reshaped = tf.reshape(c_matched, output_shape)
-
-        return c_reshaped
+        return tf.reshape(c_matched, output_shape)

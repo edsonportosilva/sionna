@@ -124,7 +124,7 @@ class Scrambler(Layer):
         super().__init__(dtype=dtype, **kwargs)
 
         assert isinstance(keep_batch_constant, bool), \
-            "keep_batch_constant must be bool."
+                "keep_batch_constant must be bool."
         self._keep_batch_constant = keep_batch_constant
 
         if seed is not None:
@@ -218,28 +218,27 @@ class Scrambler(Layer):
         """
         is_binary = self._binary # can be overwritten if explicitly provided
 
-        if isinstance(inputs, (tuple, list)):
-            if len(inputs)==1: # if user wants to call with call([x])
-                seed = None
-                x = inputs
-            elif len(inputs)==2:
-                x, seed = inputs
-            elif len(inputs)==3:
-            # allow that flag binary is explicitly provided (for descrambler)
-                x, seed, is_binary = inputs
-                # is binary can be either a tensor or bool
-                if isinstance(is_binary, tf.Tensor):
-                    if not is_binary.dtype.is_bool:
-                        raise TypeError("binary must be bool.")
-                else: # is boolean
-                    assert isinstance(is_binary.dtype, bool), \
-                    "binary must be bool."
-            else:
-                raise TypeError("inputs cannot have more than 3 entries.")
-        else:
+        if (
+            isinstance(inputs, (tuple, list))
+            and len(inputs) == 1
+            or not isinstance(inputs, (tuple, list))
+        ): # if user wants to call with call([x])
             seed = None
             x = inputs
-
+        elif len(inputs) == 2:
+            x, seed = inputs
+        elif len(inputs) == 3:
+            # allow that flag binary is explicitly provided (for descrambler)
+            x, seed, is_binary = inputs
+            # is binary can be either a tensor or bool
+            if isinstance(is_binary, tf.Tensor):
+                if not is_binary.dtype.is_bool:
+                    raise TypeError("binary must be bool.")
+            else: # is boolean
+                assert isinstance(is_binary.dtype, bool), \
+                    "binary must be bool."
+        else:
+            raise TypeError("inputs cannot have more than 3 entries.")
         tf.debugging.assert_type(x, self.dtype,
                                  "Invalid input dtype.")
 
@@ -267,12 +266,9 @@ class Scrambler(Layer):
 
         if is_binary:
             # flipp the bits by substraction and map -1 to 1 via abs(.) operator
-            x_out = tf.abs(x - rand_seq)
-        else:
-            rand_seq_bipol = -2 * rand_seq + 1
-            x_out = tf.multiply(x, rand_seq_bipol)
-
-        return x_out
+            return tf.abs(x - rand_seq)
+        rand_seq_bipol = -2 * rand_seq + 1
+        return tf.multiply(x, rand_seq_bipol)
 
 class Descrambler(Layer):
     """Descrambler(scrambler, binary=True, dtype=None, **kwargs)

@@ -143,7 +143,7 @@ class TestRandomInterleaver(unittest.TestCase):
             llr = tf.random.uniform(tf.constant(s, dtype=tf.int32),
                                     minval=-100,
                                     maxval=100)
-            for a in range(0, len(s)):
+            for a in range(len(s)):
                 for m in [True, False]:
                     if a==0: # check that axis=-1 works as well...axis=0 is
                         # invalid (=batch_dim) and does not need to be checked
@@ -328,7 +328,7 @@ class TestRandomInterleaver(unittest.TestCase):
 
             #s_min = 0
             cont = True
-            for s_min in range(1, k, 1):
+            for s_min in range(1, k):
                 for i in range(k):
                     a = x_int[i]
                     if i-s_min>=0:
@@ -431,11 +431,11 @@ class TestInterleaverRC(unittest.TestCase):
 
         shapes=[[10,20,30],[10,22,33,44],[20,10,10,10,9]]
 
+        depths = [2, 4, 7, 8]
         for s in shapes:
             #check soft-value scrambling (flip sign)
             llr = tf.random.uniform(tf.constant(s, dtype=tf.int32))
-            for a in range(0,len(s)):
-                depths = [2, 4, 7, 8]
+            for a in range(len(s)):
                 for d in depths:
                     i = RowColumnInterleaver(row_depth=d, axis=a)
                     i2 = RowColumnInterleaver(row_depth=d, axis=a, inverse=True)
@@ -465,7 +465,7 @@ class TestInterleaverRC(unittest.TestCase):
         for s in shapes:
             #check soft-value scrambling (flip sign)
             llr = tf.random.uniform(tf.constant(s, dtype=tf.int32))
-            for a in range(0,len(s)):
+            for a in range(len(s)):
                 depths = [2, 4, 7, 8]
                 for d in depths:
                     i = RowColumnInterleaver(row_depth=d, axis=a)
@@ -574,7 +574,7 @@ class TestDeinterleaver(unittest.TestCase):
         for s in shapes:
             # check soft-value scrambling (flip sign)
             llr = tf.random.uniform(tf.constant(s, dtype=tf.int32))
-            for a in range(0,len(s)):
+            for a in range(len(s)):
                 depths = [2, 4, 7, 8]
                 for d in depths:
                     int_rc = RowColumnInterleaver(row_depth=d, axis=a)

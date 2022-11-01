@@ -126,11 +126,7 @@ def convolve(inp, ker, padding='full', axis=-1):
         out_2 = tf.nn.convolution(inp_imag, ker_imag, padding=tf_conv_mode)
     else:
         out_2 = tf.zeros_like(out_1)
-    if complex_output:
-        out = tf.complex(out_1 - out_2,
-                        out_3 + out_4)
-    else:
-        out = out_1
+    out = tf.complex(out_1 - out_2, out_3 + out_4) if complex_output else out_1
 
     # Reshape the output to the expected shape
     out = tf.squeeze(out, axis=-1)
@@ -312,5 +308,4 @@ def empirical_aclr(x, oversampling=1.0, f_min=-0.5, f_max=0.5):
                                      tf.less(freqs, f_max)))
     p_out = tf.reduce_sum(tf.gather(psd, ind_out))
     p_in = tf.reduce_sum(tf.gather(psd, ind_in))
-    aclr = p_out/p_in
-    return aclr
+    return p_out/p_in

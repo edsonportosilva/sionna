@@ -196,12 +196,7 @@ class E2ESystemTrainableRX(Model):
         llr = tf.reshape(llr, [batch_size, n])
         llr_info = self._decoder(llr)
 
-        #################
-        # Compute loss
-        #################
-        loss = self._bce(b[:,0,0], llr_info)
-
-        return loss
+        return self._bce(b[:,0,0], llr_info)
 
 ###########################################################
 # Layer implementing a small neural transmitter
@@ -307,12 +302,7 @@ class E2ESystemTrainableRXTX(Model):
         llr = tf.reshape(llr, [batch_size, n])
         llr_info = self._decoder(llr)
 
-        #################
-        # Compute loss
-        #################
-        loss = self._bce(b[:,0,0], llr_info)
-
-        return loss
+        return self._bce(b[:,0,0], llr_info)
 
 ###########################################################
 # Test suite

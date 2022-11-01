@@ -146,15 +146,11 @@ class TestFEC(unittest.TestCase):
         num_bits_per_symbol = 2 # QPSK
         ebno_db = np.arange(0, 5, 0.5) # sim SNR range
 
-        # Create list of encoder/decoder pairs to be analyzed.
-        codes_under_test = []
-
         # 5G LDPC codes with 20 BP iterations
         enc = LDPC5GEncoder(k=k, n=n)
         dec = LDPC5GDecoder(enc, num_iter=20)
         name = "5G LDPC BP-20"
-        codes_under_test.append([enc, dec, name])
-
+        codes_under_test = [[enc, dec, name]]
         # Polar Codes (SC decoding)
         enc = Polar5GEncoder(k=k, n=n)
         dec = Polar5GDecoder(enc, dec_type="SC")

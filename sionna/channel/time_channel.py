@@ -184,7 +184,4 @@ class TimeChannel(tf.keras.layers.Layer):
         else:
             y = self._apply_channel([x, h_time])
 
-        if self._return_channel:
-            return y, h_time
-        else:
-            return y
+        return (y, h_time) if self._return_channel else y

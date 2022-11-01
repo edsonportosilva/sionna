@@ -140,13 +140,9 @@ class GaussianPriorSource(Layer):
         mu_llr = tf.cast(mu_llr, super().dtype)
         sigma_llr = tf.cast(sigma_llr, super().dtype)
 
-        # generate LLRs with Gaussian approximation (BPSK, all-zero cw)
-        # Use negative mean as we generate logits with definition p(b=1)/p(b=0)
-        llr = tf.random.normal(output_shape,
-                                mean=-1.*mu_llr,
-                                stddev=sigma_llr,
-                                dtype=super().dtype)
-        return llr
+        return tf.random.normal(
+            output_shape, mean=-1.0 * mu_llr, stddev=sigma_llr, dtype=super().dtype
+        )
 
 def llr2mi(llr, s=None, reduce_dims=True):
     # pylint: disable=line-too-long
@@ -254,8 +250,7 @@ def j_fun(mu):
     h2 = 0.8935
     h3 = 1.1064
     mu = np.maximum(mu, 1e-10) # input must be positive for numerical stability
-    mi = (1-2**(-h1*(2*mu)**h2))**h3
-    return mi
+    return (1-2**(-h1*(2*mu)**h2))**h3
 
 
 def j_fun_inv(mi):
@@ -347,8 +342,7 @@ def j_fun_tf(mu, verify_inputs=True):
     h1 = 0.3073
     h2 = 0.8935
     h3 = 1.1064
-    mi = (1-2**(-h1*(2*mu)**h2))**h3
-    return mi
+    return (1-2**(-h1*(2*mu)**h2))**h3
 
 def j_fun_inv_tf(mi, verify_inputs=True):
     # pylint: disable=line-too-long
@@ -486,9 +480,8 @@ def plot_exit_chart(mi_a=None, mi_ev=None, mi_ec=None, title="EXIT-Chart"):
 
     assert isinstance(title, str), "title must be str."
 
-    if not (mi_ev is None and mi_ec is None):
-        if mi_a is None:
-            raise ValueError("mi_a cannot be None if mi_e is provided.")
+    if (mi_ev is not None or mi_ec is not None) and mi_a is None:
+        raise ValueError("mi_a cannot be None if mi_e is provided.")
 
     if mi_ev is not None:
         assert (len(mi_a)==len(mi_ev)), "mi_a and mi_ev must have same length."
@@ -686,8 +679,7 @@ def bin2int(arr):
             Integer representation of ``arr``.
 
     """
-    if len(arr) == 0: return None
-    return int(''.join([str(x) for x in arr]), 2)
+    return None if len(arr) == 0 else int(''.join([str(x) for x in arr]), 2)
 
 def bin2int_tf(arr):
     """
@@ -709,10 +701,7 @@ def bin2int_tf(arr):
     len_ = tf.shape(arr)[-1]
     shifts = tf.range(len_-1,-1,-1)
 
-    # (2**len_-1)*arr[0] +... 2*arr[len_-2] + 1*arr[len_-1]
-    op = tf.reduce_sum(tf.bitwise.left_shift(arr, shifts), axis=-1)
-
-    return op
+    return tf.reduce_sum(tf.bitwise.left_shift(arr, shifts), axis=-1)
 
 def int2bin(num, len_):
     """
@@ -740,8 +729,7 @@ def int2bin(num, len_):
     assert len_ >= 0,  "width should be non-negative"
 
     bin_ = format(num, f'0{len_}b')
-    binary_vals = [int(x) for x in bin_[-len_:]] if len_ else []
-    return binary_vals
+    return [int(x) for x in bin_[-len_:]] if len_ else []
 
 def int2bin_tf(ints, len_):
     """
@@ -767,9 +755,9 @@ def int2bin_tf(ints, len_):
     assert len_ >= 0
 
     shifts = tf.range(len_-1, -1, delta=-1)
-    bits = tf.math.floormod(
-        tf.bitwise.right_shift(tf.expand_dims(ints, -1), shifts), 2)
-    return bits
+    return tf.math.floormod(
+        tf.bitwise.right_shift(tf.expand_dims(ints, -1), shifts), 2
+    )
 
 def alist2mat(alist, verbose=True):
     # pylint: disable=line-too-long
@@ -903,11 +891,7 @@ def load_alist(path):
     with open(path, "r") as reader: # pylint: disable=unspecified-encoding
         # read list line by line (different length)
         for line in reader:
-            l = []
-            # append all entries
-            for word in line.split():
-                l.append(int(word))
-            if l: # ignore empty lines
+            if l := [int(word) for word in line.split()]:
                 alist.append(l)
 
     return alist
@@ -1011,9 +995,7 @@ def make_systematic(mat, is_pcm=False):
         mat[:,:m] = mat[:,-m:]
         mat[:,-m:] = im
         # and track column swaps
-        for idx in range(m):
-            column_swaps.append([idx, n-m+idx])
-
+        column_swaps.extend([idx, n-m+idx] for idx in range(m))
     # return integer array
     mat = mat.astype(int)
     return mat, column_swaps
@@ -1289,22 +1271,18 @@ class LinearEncoder(Layer):
         # tf.int8 currently not supported by tf.matmult
         assert (dtype in
                (tf.float16, tf.float32, tf.float64, tf.int32, tf.int64)), \
-               "Unsupported dtype."
+                   "Unsupported dtype."
 
         # check input values for consistency
         assert isinstance(is_pcm, bool), \
-                                    'is_parity_check must be bool.'
+                                        'is_parity_check must be bool.'
 
         # verify that enc_mat is binary
         assert ((enc_mat==0) | (enc_mat==1)).all(), "enc_mat is not binary."
         assert (len(enc_mat.shape)==2), "enc_mat must be 2-D array."
 
         # in case parity-check matrix is provided, convert to generator matrix
-        if is_pcm:
-            self._gm = pcm2gm(enc_mat, verify_results=True)
-        else:
-            self._gm = enc_mat
-
+        self._gm = pcm2gm(enc_mat, verify_results=True) if is_pcm else enc_mat
         self._k = self._gm.shape[0]
         self._n = self._gm.shape[1]
         self._coderate = self._k / self._n

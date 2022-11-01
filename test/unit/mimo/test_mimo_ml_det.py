@@ -58,14 +58,14 @@ class TestSymbolMaximumLikelihoodDetector(unittest.TestCase):
                 self.assertTrue(np.allclose(max_dist, 0.0, atol=1e-5))
 
     def test_output_dimensions(self):
+        batch_size = 8
+        dim1 = 3
+        dim2 = 5
         for num_bits_per_symbol in (2,4):
             num_points = 2**num_bits_per_symbol
             for num_streams in (1,2,3,4):
                 for num_rx_ant in (4, 16, 32):
                     ml = MaximumLikelihoodDetector("symbol", "app", num_streams, "qam", num_bits_per_symbol)
-                    batch_size = 8
-                    dim1 = 3
-                    dim2 = 5
                     y = tf.complex( tf.random.normal([batch_size, dim1, dim2, num_rx_ant]),
                                     tf.random.normal([batch_size, dim1, dim2, num_rx_ant]))
                     h = tf.complex( tf.random.normal([batch_size, dim1, dim2, num_rx_ant, num_streams]),
