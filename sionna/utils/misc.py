@@ -61,11 +61,7 @@ def ebnodb2no(ebno_db, num_bits_per_symbol, coderate, resource_grid=None):
         The value of :math:`N_o` in linear scale.
     """
 
-    if tf.is_tensor(ebno_db):
-        dtype = ebno_db.dtype
-    else:
-        dtype = tf.float32
-
+    dtype = ebno_db.dtype if tf.is_tensor(ebno_db) else tf.float32
     ebno = tf.math.pow(tf.cast(10., dtype), ebno_db/10.)
 
     energy_per_symbol = 1
@@ -81,10 +77,12 @@ def ebnodb2no(ebno_db, num_bits_per_symbol, coderate, resource_grid=None):
                     * resource_grid.num_effective_subcarriers
         energy_per_symbol *= num_syms / resource_grid.num_data_symbols
 
-    no = 1/(ebno * coderate * tf.cast(num_bits_per_symbol, dtype) \
-          / tf.cast(energy_per_symbol, dtype))
-
-    return no
+    return 1 / (
+        ebno
+        * coderate
+        * tf.cast(num_bits_per_symbol, dtype)
+        / tf.cast(energy_per_symbol, dtype)
+    )
 
 
 def hard_decisions(llr):
@@ -509,11 +507,7 @@ def sim_ber(mc_fun,
             Can be used to generate table header.
         """
         # set carriage return if not final step
-        if is_final:
-            end_str = "\n"
-        else:
-            end_str = "\r"
-
+        end_str = "\n" if is_final else "\r"
         # prepare to print table header
         if header_text is not None:
             row_text = header_text
@@ -549,7 +543,7 @@ def sim_ber(mc_fun,
         print("{: >9} |{: >11} |{: >11} |{: >12} |{: >12} |{: >13} |{: >12} |{: >12} |{: >10}".format(*row_text), end=end_str)
 
 
-     # init table headers
+
     header_text = ["EbNo [dB]", "BER", "BLER", "bit errors",
                    "num bits", "block errors", "num blocks",
                    "runtime [s]", "status"]
@@ -647,21 +641,22 @@ def sim_ber(mc_fun,
 
 
                 # bit-error based stopping cond.
-                if num_target_bit_errors is not None:
-                    if tf.greater_equal(bit_errors[i], num_target_bit_errors):
-                        status[i] = 3 # change internal status for summary
-                        # stop runtime timer
-                        runtime[i] = time.perf_counter() - runtime[i]
-                        break # enough errors for SNR point have been simulated
+                if num_target_bit_errors is not None and tf.greater_equal(
+                    bit_errors[i], num_target_bit_errors
+                ):
+                    status[i] = 3 # change internal status for summary
+                    # stop runtime timer
+                    runtime[i] = time.perf_counter() - runtime[i]
+                    break # enough errors for SNR point have been simulated
 
                 # block-error based stopping cond.
-                if num_target_block_errors is not None:
-                    if tf.greater_equal(block_errors[i],
-                                        num_target_block_errors):
-                        # stop runtime timer
-                        runtime[i] = time.perf_counter() - runtime[i]
-                        status[i] = 4 # change internal status for summary
-                        break # enough errors for SNR point have been simulated
+                if num_target_block_errors is not None and tf.greater_equal(
+                    block_errors[i], num_target_block_errors
+                ):
+                    # stop runtime timer
+                    runtime[i] = time.perf_counter() - runtime[i]
+                    status[i] = 4 # change internal status for summary
+                    break # enough errors for SNR point have been simulated
 
                 # max iter have been reached -> continue with next SNR point
                 if iter_count==max_mc_iter-1: # all iterations are done
@@ -677,15 +672,13 @@ def sim_ber(mc_fun,
                                 rt=runtime[i])
 
             # early stop if no error occurred
-            if early_stop: # only if early stop is active
-                if block_errors[i]==0:
-                    status[i] = 2 # change internal status for summary
-                    if verbose:
-                        print("\nSimulation stopped as no error occurred " \
-                              f"@ EbNo = {ebno_dbs[i].numpy():.1f} dB.\n")
-                    break
+            if early_stop and block_errors[i] == 0:
+                status[i] = 2 # change internal status for summary
+                if verbose:
+                    print("\nSimulation stopped as no error occurred " \
+                          f"@ EbNo = {ebno_dbs[i].numpy():.1f} dB.\n")
+                break
 
-    # Stop if KeyboardInterrupt is detected and set remaining SNR points to -1
     except KeyboardInterrupt as e:
 
         # Raise Interrupt again to stop outer loops
@@ -743,9 +736,7 @@ def complex_normal(shape, var=1.0, dtype=tf.complex64):
     # Generate complex Gaussian noise with the right variance
     xr = tf.random.normal(shape, stddev=stddev, dtype=dtype.real_dtype)
     xi = tf.random.normal(shape, stddev=stddev, dtype=dtype.real_dtype)
-    x = tf.complex(xr, xi)
-
-    return x
+    return tf.complex(xr, xi)
 
 
 ###########################################################

@@ -87,10 +87,7 @@ def zero_forcing_precoder(x, h, return_precoding_matrix=False):
     # Precode
     x_precoded = tf.squeeze(tf.matmul(g, x_precoded), -1)
 
-    if return_precoding_matrix:
-        return (x_precoded, g)
-    else:
-        return x_precoded
+    return (x_precoded, g) if return_precoding_matrix else x_precoded
 
 
 

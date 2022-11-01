@@ -187,10 +187,7 @@ class ChannelCoefficientsGenerator:
                                                                         c_ds)
 
         # Return additional information if requested
-        if debug:
-            return h, delays, phi, sample_times
-
-        return h, delays
+        return (h, delays, phi, sample_times) if debug else (h, delays)
 
     ###########################################
     # Utility functions
@@ -247,8 +244,7 @@ class ChannelCoefficientsGenerator:
             cos(b)*sin(c),
             cos(b)*cos(c)], axis=-1)
 
-        rot_mat = tf.stack([row_1, row_2, row_3], axis=-2)
-        return rot_mat
+        return tf.stack([row_1, row_2, row_3], axis=-2)
 
     def _rot_pos(self, orientations, positions):
         r"""
@@ -285,8 +281,7 @@ class ChannelCoefficientsGenerator:
             Inverse of the rotation matrix corresponding to ``orientations``
         """
         rot_mat = self._forward_rotation_matrix(orientations)
-        rot_mat_inv = tf.linalg.matrix_transpose(rot_mat)
-        return rot_mat_inv
+        return tf.linalg.matrix_transpose(rot_mat)
 
     def _gcs_to_lcs(self, orientations, theta, phi):
         # pylint: disable=line-too-long
@@ -362,8 +357,7 @@ class ChannelCoefficientsGenerator:
         real = sin(c)*cos(theta)*sin(phi-a)
         real += cos(c)*(cos(b)*sin(theta)-sin(b)*cos(theta)*cos(phi-a))
         imag = sin(c)*cos(phi-a) + sin(b)*cos(c)*sin(phi-a)
-        psi = tf.math.angle(tf.complex(real, imag))
-        return psi
+        return tf.math.angle(tf.complex(real, imag))
 
     def _l2g_response(self, f_prime, orientations, theta, phi):
         # pylint: disable=line-too-long
@@ -393,8 +387,7 @@ class ChannelCoefficientsGenerator:
         row1 = tf.stack([cos(psi), -sin(psi)], axis=-1)
         row2 = tf.stack([sin(psi), cos(psi)], axis=-1)
         mat = tf.stack([row1, row2], axis=-2)
-        f = tf.matmul(mat, tf.expand_dims(f_prime, -1))
-        return f
+        return tf.matmul(mat, tf.expand_dims(f_prime, -1))
 
     def _step_11_get_tx_antenna_positions(self, topology):
         r"""Compute d_bar_tx in (7.5-22), i.e., the positions in GCS of elements
@@ -424,9 +417,7 @@ class ChannelCoefficientsGenerator:
         tx_ant_pos_gcs = tf.reshape(tx_ant_pos_gcs,
             tf.shape(tx_ant_pos_gcs)[:-1])
 
-        d_bar_tx = tx_ant_pos_gcs
-
-        return d_bar_tx
+        return tx_ant_pos_gcs
 
     def _step_11_get_rx_antenna_positions(self, topology):
         r"""Compute d_bar_rx in (7.5-22), i.e., the positions in GCS of elements
@@ -456,9 +447,7 @@ class ChannelCoefficientsGenerator:
         rx_ant_pos_gcs = tf.reshape(rx_ant_pos_gcs,
             tf.shape(rx_ant_pos_gcs)[:-1])
 
-        d_bar_rx = rx_ant_pos_gcs
-
-        return d_bar_rx
+        return rx_ant_pos_gcs
 
     def _step_10(self, shape):
         r"""
@@ -475,10 +464,12 @@ class ChannelCoefficientsGenerator:
         phi : [shape] + [4], tf.float
             Phases for all polarization combinations
         """
-        phi = tf.random.uniform(tf.concat([shape, [4]], axis=0), minval=-PI,
-            maxval=PI, dtype=self._dtype.real_dtype)
-
-        return phi
+        return tf.random.uniform(
+            tf.concat([shape, [4]], axis=0),
+            minval=-PI,
+            maxval=PI,
+            dtype=self._dtype.real_dtype,
+        )
 
     def _step_11_phase_matrix(self, phi, rays):
         # pylint: disable=line-too-long
@@ -511,9 +502,7 @@ class ChannelCoefficientsGenerator:
         e2 = xpr_scaling*tf.exp(tf.complex(tf.constant(0.,
                                 self._dtype.real_dtype), phi[...,2]))
         shape = tf.concat([tf.shape(e0), [2,2]], axis=-1)
-        h_phase = tf.reshape(tf.stack([e0, e1, e2, e3], axis=-1), shape)
-
-        return h_phase
+        return tf.reshape(tf.stack([e0, e1, e2, e3], axis=-1), shape)
 
     def _step_11_doppler_matrix(self, topology, aoa, zoa, t):
         # pylint: disable=line-too-long
@@ -567,11 +556,9 @@ class ChannelCoefficientsGenerator:
         # Compute phase shift due to doppler
         # [batch size, num_tx, num rx, num clusters, num rays, num time steps]
         exponent = 2*PI/lambda_0*tf.reduce_sum(r_hat_rx*v_bar, -2)*t
-        h_doppler = tf.exp(tf.complex(tf.constant(0.,
-                                    self._dtype.real_dtype), exponent))
-
-        # [batch size, num_tx, num rx, num clusters, num rays, num time steps]
-        return h_doppler
+        return tf.exp(
+            tf.complex(tf.constant(0.0, self._dtype.real_dtype), exponent)
+        )
 
     def _step_11_array_offsets(self, topology, aoa, aod, zoa, zod):
         # pylint: disable=line-too-long
@@ -653,9 +640,7 @@ class ChannelCoefficientsGenerator:
                                     self._dtype.real_dtype), exp_tx))
         exp_tx = tf.expand_dims(exp_tx, -2)
 
-        h_array = exp_rx*exp_tx
-
-        return h_array
+        return exp_rx*exp_tx
 
     def _step_11_field_matrix(self, topology, aoa, aod, zoa, zod, h_phase):
         # pylint: disable=line-too-long
@@ -940,7 +925,6 @@ class ChannelCoefficientsGenerator:
         zoa = topology.los_zoa
         zod = topology.los_zod
 
-         # LoS departure and arrival angles
         aoa = tf.expand_dims(tf.expand_dims(aoa, axis=3), axis=4)
         zoa = tf.expand_dims(tf.expand_dims(zoa, axis=3), axis=4)
         aod = tf.expand_dims(tf.expand_dims(aod, axis=3), axis=4)
@@ -973,8 +957,7 @@ class ChannelCoefficientsGenerator:
         h_delay = tf.expand_dims(tf.expand_dims(tf.expand_dims(
             tf.expand_dims(h_delay, axis=3), axis=4), axis=5), axis=6)
 
-        h_los = h_field*h_array*h_doppler*h_delay
-        return h_los
+        return h_field*h_array*h_doppler*h_delay
 
     def _step_11(self, phi, topology, k_factor, rays, t, c_ds):
         # pylint: disable=line-too-long

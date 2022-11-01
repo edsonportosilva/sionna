@@ -68,7 +68,7 @@ class TestOFDMDemodulator(unittest.TestCase):
         fft_size = 72
         num_ofdm_symbols = 14
         qam_source = QAMSource(4)
-        for cp_length in range(0,fft_size+1):
+        for cp_length in range(fft_size+1):
             modulator = OFDMModulator(cp_length)
             demodulator = OFDMDemodulator(fft_size, 0, cp_length)
             x = qam_source([batch_size, num_ofdm_symbols, fft_size])
@@ -106,6 +106,8 @@ class TestOFDMDemodulator(unittest.TestCase):
 class TestOFDMModDemod(unittest.TestCase):
     def test_end_to_end(self):
         """E2E test verying that all shapes can be properly inferred (see Issue #7)"""
+
+
         class E2ESystem(Model):
             def __init__(self, cp_length, padding):
                 super().__init__()
@@ -123,8 +125,8 @@ class TestOFDMModDemod(unittest.TestCase):
                 x_time  = self.mod(x_rg)
                 pad = tf.zeros_like(x_time)[...,:self.padding]
                 x_time = tf.concat([x_time, pad], axis=-1)
-                x_f = self.demod(x_time)
-                return x_f
+                return self.demod(x_time)
+
 
         for cp_length in [0,1,5,12]:
             for padding in [0,1,5,71]:

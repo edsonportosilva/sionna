@@ -405,10 +405,9 @@ class TestLSP(unittest.TestCase):
     @channel_test_on_models(('rma', 'umi', 'uma'), ('los', 'nlos', 'o2i'))
     def test_cross_correlation(self, model, submodel):
         """Test the LSP cross correlation"""
-        lsp_list = []
         ds_samples = TestLSP.lsp_samples[model][submodel].ds[:,0,0].numpy()
         ds_samples = np.log10(ds_samples)
-        lsp_list.append(ds_samples)
+        lsp_list = [ds_samples]
         asd_samples = TestLSP.lsp_samples[model][submodel].asd[:,0,0].numpy()
         asd_samples = np.log10(asd_samples)
         lsp_list.append(asd_samples)
@@ -529,7 +528,48 @@ class TestLSP(unittest.TestCase):
         fc = TestLSP.CARRIER_FREQUENCY
         h_ut = TestLSP.H_UT
         h_bs = TestLSP.H_BS
-        if model == 'rma':
+        if (
+            model != 'rma'
+            and model == 'umi'
+            and submodel == 'o2i'
+            or model != 'rma'
+            and model != 'umi'
+            and model == 'uma'
+            and submodel == 'o2i'
+        ):
+            for loss_model in ('low', 'high'):
+                samples = TestLSP.pathlosses[model][f'{submodel}-{loss_model}']
+                mean_samples = tf.reduce_mean(samples, axis=0).numpy()
+                std_samples = tf.math.reduce_std(samples, axis=0).numpy()
+                #
+                d_2ds = TestLSP.d_2d[0,0]
+                d_3ds = TestLSP.d_3d
+                samples_ref = np.array([pathloss(model, submodel, d_2d, d_3d,\
+                        fc, h_bs, h_ut, loss_model) for d_2d, d_3d in zip(d_2ds, d_3ds)])
+                #
+                max_err = np.max(np.abs(mean_samples-samples_ref))
+                self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_MEAN,
+                    f"{model}:{submodel}")
+                max_err = np.max(np.abs(std_samples-pathloss_std(model, submodel, loss_model)))
+                self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_STD,
+                    f"{model}:{submodel}")
+        elif model != 'rma' and model == 'umi' or model != 'rma' and model == 'uma':
+            samples = TestLSP.pathlosses[model][submodel]
+            mean_samples = tf.reduce_mean(samples, axis=0).numpy()
+            std_samples = tf.math.reduce_std(samples, axis=0).numpy()
+            #
+            d_2ds = TestLSP.d_2d[0,0]
+            d_3ds = TestLSP.d_3d
+            samples_ref = np.array([pathloss(model, submodel, d_2d, d_3d,\
+                    fc, h_bs, h_ut) for d_2d, d_3d in zip(d_2ds, d_3ds)])
+            #
+            max_err = np.max(np.abs(mean_samples-samples_ref))
+            self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_MEAN,
+                f"{model}:{submodel}")
+            max_err = np.max(np.abs(std_samples-pathloss_std(model, submodel)))
+            self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_STD,
+                f"{model}:{submodel}")
+        elif model == 'rma':
             samples = TestLSP.pathlosses[model][submodel]
             mean_samples = tf.reduce_mean(samples, axis=0).numpy()
             std_samples = tf.math.reduce_std(samples, axis=0).numpy()
@@ -539,7 +579,7 @@ class TestLSP(unittest.TestCase):
             w = TestLSP.rma_w
             h = TestLSP.rma_h
             samples_ref = np.array([pathloss(model, submodel, d_2d, d_3d, fc,\
-                 h_bs, h_ut, h, w) for d_2d, d_3d in zip(d_2ds, d_3ds)])
+                     h_bs, h_ut, h, w) for d_2d, d_3d in zip(d_2ds, d_3ds)])
             #
             max_err = np.max(np.abs(mean_samples-samples_ref))
             self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_MEAN,
@@ -547,71 +587,3 @@ class TestLSP(unittest.TestCase):
             max_err = np.max(np.abs(std_samples-pathloss_std(model, submodel)))
             self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_STD,
                 f"{model}:{submodel}")
-        elif model == 'umi':
-            if submodel == 'o2i':
-                for loss_model in ('low', 'high'):
-                    samples = TestLSP.pathlosses[model][submodel+'-'+loss_model]
-                    mean_samples = tf.reduce_mean(samples, axis=0).numpy()
-                    std_samples = tf.math.reduce_std(samples, axis=0).numpy()
-                    #
-                    d_2ds = TestLSP.d_2d[0,0]
-                    d_3ds = TestLSP.d_3d
-                    samples_ref = np.array([pathloss(model, submodel, d_2d, d_3d,\
-                        fc, h_bs, h_ut, loss_model) for d_2d, d_3d in zip(d_2ds, d_3ds)])
-                    #
-                    max_err = np.max(np.abs(mean_samples-samples_ref))
-                    self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_MEAN,
-                        f"{model}:{submodel}")
-                    max_err = np.max(np.abs(std_samples-pathloss_std(model, submodel, loss_model)))
-                    self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_STD,
-                        f"{model}:{submodel}")
-            else:
-                samples = TestLSP.pathlosses[model][submodel]
-                mean_samples = tf.reduce_mean(samples, axis=0).numpy()
-                std_samples = tf.math.reduce_std(samples, axis=0).numpy()
-                #
-                d_2ds = TestLSP.d_2d[0,0]
-                d_3ds = TestLSP.d_3d
-                samples_ref = np.array([pathloss(model, submodel, d_2d, d_3d,\
-                    fc, h_bs, h_ut) for d_2d, d_3d in zip(d_2ds, d_3ds)])
-                #
-                max_err = np.max(np.abs(mean_samples-samples_ref))
-                self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_MEAN,
-                    f"{model}:{submodel}")
-                max_err = np.max(np.abs(std_samples-pathloss_std(model, submodel)))
-                self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_STD,
-                    f"{model}:{submodel}")
-        elif model == 'uma':
-            if submodel == 'o2i':
-                for loss_model in ('low', 'high'):
-                    samples = TestLSP.pathlosses[model][submodel+'-'+loss_model]
-                    mean_samples = tf.reduce_mean(samples, axis=0).numpy()
-                    std_samples = tf.math.reduce_std(samples, axis=0).numpy()
-                    #
-                    d_2ds = TestLSP.d_2d[0,0]
-                    d_3ds = TestLSP.d_3d
-                    samples_ref = np.array([pathloss(model, submodel, d_2d, d_3d,\
-                        fc, h_bs, h_ut, loss_model) for d_2d, d_3d in zip(d_2ds, d_3ds)])
-                    #
-                    max_err = np.max(np.abs(mean_samples-samples_ref))
-                    self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_MEAN,
-                        f"{model}:{submodel}")
-                    max_err = np.max(np.abs(std_samples-pathloss_std(model, submodel, loss_model)))
-                    self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_STD,
-                        f"{model}:{submodel}")
-            else:
-                samples = TestLSP.pathlosses[model][submodel]
-                mean_samples = tf.reduce_mean(samples, axis=0).numpy()
-                std_samples = tf.math.reduce_std(samples, axis=0).numpy()
-                #
-                d_2ds = TestLSP.d_2d[0,0]
-                d_3ds = TestLSP.d_3d
-                samples_ref = np.array([pathloss(model, submodel, d_2d, d_3d,\
-                    fc, h_bs, h_ut) for d_2d, d_3d in zip(d_2ds, d_3ds)])
-                #
-                max_err = np.max(np.abs(mean_samples-samples_ref))
-                self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_MEAN,
-                    f"{model}:{submodel}")
-                max_err = np.max(np.abs(std_samples-pathloss_std(model, submodel)))
-                self.assertLessEqual(max_err, TestLSP.MAX_ERR_PATHLOSS_STD,
-                    f"{model}:{submodel}")

@@ -72,12 +72,11 @@ class TestCRC(unittest.TestCase):
                 crc_indicator = crc_indicator.numpy()
                 u_hat = u_hat.numpy()
                 # output shapes are equal to input shape (besides last dim)
-                self.assertTrue(np.array_equal(c.shape[0:-1], s[0:-1]))
+                self.assertTrue(np.array_equal(c.shape[:-1], s[:-1]))
                 # last dimension of output is increased by 'crc_length'
                 self.assertTrue(c.shape[-1]==s[-1]+crc_enc.crc_length)
                 #check dimensions of "crc_valid indicator" (boolean)
-                self.assertTrue(np.array_equal(crc_indicator.shape[0:-1],
-                                               s[0:-1]))
+                self.assertTrue(np.array_equal(crc_indicator.shape[:-1], s[:-1]))
                 self.assertTrue(crc_indicator.shape[-1]==1)
                 # check that decoder removes parity bits (=original shape)
                 self.assertTrue(np.array_equal(u_hat.shape, s))
@@ -198,13 +197,13 @@ class TestCRC(unittest.TestCase):
         """Check all valid polynomials from 38.212 against
         a dataset from a reference implementation."""
 
+        ref_path = 'codes/crc/'
+
         for pol in VALID_POLS:
 
-            ref_path = 'codes/crc/'
-
             # load reference codewords
-            u = np.load(ref_path + "crc_u_" + pol + ".npy")
-            x_ref_np = np.load(ref_path + "crc_x_ref_np_" + pol + ".npy")
+            u = np.load(f"{ref_path}crc_u_{pol}.npy")
+            x_ref_np = np.load(f"{ref_path}crc_x_ref_np_{pol}.npy")
 
             crc_enc = CRCEncoder(pol)
 

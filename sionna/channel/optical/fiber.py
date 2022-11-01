@@ -269,21 +269,22 @@ class SSFM(Layer):
         # Window function calculation (depends on length of the signal)
         window = tf.concat(
             [
-                self._window[0:self._half_window_length],
+                self._window[: self._half_window_length],
                 tf.complex(
                     tf.ones(
-                        [input_shape[-1] - 2*self._half_window_length],
-                        dtype=self._rdtype
+                        [input_shape[-1] - 2 * self._half_window_length],
+                        dtype=self._rdtype,
                     ),
                     tf.zeros(
-                        [input_shape[-1] - 2*self._half_window_length],
-                        dtype=self._rdtype
-                    )
+                        [input_shape[-1] - 2 * self._half_window_length],
+                        dtype=self._rdtype,
+                    ),
                 ),
-                self._window[self._half_window_length::]
+                self._window[self._half_window_length : :],
             ],
-            axis=0
+            axis=0,
         )
+
 
         # All-zero vector
         zeros = tf.zeros(input_shape, dtype=self._rdtype)

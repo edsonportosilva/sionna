@@ -81,23 +81,18 @@ def plot_ber(snr_db,
     assert isinstance(title, str), "title must be str."
 
     # broadcast snr if ber is list
-    if isinstance(ber, list):
-        if not isinstance(snr_db, list):
-            snr_db = [snr_db]*len(ber)
+    if isinstance(ber, list) and not isinstance(snr_db, list):
+        snr_db = [snr_db]*len(ber)
 
     # check that is_bler is list of same size and contains only bools
     if is_bler is None:
-        if isinstance(ber, list):
-            is_bler = [False] * len(ber) # init is_bler as list with False
-        else:
-            is_bler = False
+        is_bler = [False] * len(ber) if isinstance(ber, list) else False
+    elif isinstance(is_bler, list):
+        assert (len(is_bler) == len(ber)), "is_bler has invalid size."
     else:
-        if isinstance(is_bler, list):
-            assert (len(is_bler) == len(ber)), "is_bler has invalid size."
-        else:
-            assert isinstance(is_bler, bool), \
-                "is_bler must be bool or list of bool."
-            is_bler = [is_bler] # change to list
+        assert isinstance(is_bler, bool), \
+            "is_bler must be bool or list of bool."
+        is_bler = [is_bler] # change to list
 
     # tile snr_db if not list, but ber is list
 
@@ -115,16 +110,10 @@ def plot_ber(snr_db,
     # return figure handle
     if isinstance(ber, list):
         for idx, b in enumerate(ber):
-            if is_bler[idx]:
-                line_style = "--"
-            else:
-                line_style = ""
+            line_style = "--" if is_bler[idx] else ""
             plt.semilogy(snr_db[idx], b, line_style, linewidth=2)
     else:
-        if is_bler:
-            line_style = "--"
-        else:
-            line_style = ""
+        line_style = "--" if is_bler else ""
         plt.semilogy(snr_db, ber, line_style, linewidth=2)
 
     plt.grid(which="both")
@@ -137,9 +126,6 @@ def plot_ber(snr_db,
     if save_fig:
         plt.savefig(path)
         plt.close(fig)
-    else:
-        #plt.close(fig)
-        pass
     return fig, ax
 
 ###### Plotting classes #######
@@ -214,26 +200,27 @@ class PlotBER():
         assert isinstance(save_fig, bool), "save_fig must be bool."
 
         # broadcast snr if ber is list
-        if isinstance(ber, list):
-            if not isinstance(snr_db, list):
-                snr_db = [snr_db]*len(ber)
+        if isinstance(ber, list) and not isinstance(snr_db, list):
+            snr_db = [snr_db]*len(ber)
 
-        if not isinstance(snr_db, list):
-            snrs = self._snrs + [snr_db]
-        else:
-            snrs = self._snrs + snr_db
-        if not isinstance(ber, list):
-            bers = self._bers + [ber]
-        else:
-            bers = self._bers + ber
-        if not isinstance(legend, list):
-            legends = self._legends + [legend]
-        else:
-            legends = self._legends + legend
-        if not isinstance(is_bler, list):
-            is_bler = self._is_bler + [is_bler]
-        else:
-            is_bler = self._is_bler + is_bler
+        snrs = (
+            self._snrs + snr_db
+            if isinstance(snr_db, list)
+            else self._snrs + [snr_db]
+        )
+
+        bers = self._bers + ber if isinstance(ber, list) else self._bers + [ber]
+        legends = (
+            self._legends + legend
+            if isinstance(legend, list)
+            else self._legends + [legend]
+        )
+
+        is_bler = (
+            self._is_bler + is_bler
+            if isinstance(is_bler, list)
+            else self._is_bler + [is_bler]
+        )
 
         # set ylabel
         ylabel = "BER / BLER"
@@ -400,7 +387,7 @@ class PlotBER():
         if add_bler:
             self._bers += [bler]
             self._snrs +=  [ebno_dbs]
-            self._legends += [legend + " (BLER)"]
+            self._legends += [f"{legend} (BLER)"]
             self._is_bler += [True]
 
         if show_fig:

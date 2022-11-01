@@ -57,7 +57,7 @@ class TestMapper(unittest.TestCase):
     def test_mappings(self):
         num_bits_per_symbol = 8
         b = np.zeros([2**num_bits_per_symbol, num_bits_per_symbol])
-        for i in range(0, 2**num_bits_per_symbol):
+        for i in range(2**num_bits_per_symbol):
             b[i] = np.array(list(np.binary_repr(i,num_bits_per_symbol)), dtype=np.int16)
         m = Mapper("qam", num_bits_per_symbol)
         x = m(b)
@@ -127,13 +127,13 @@ class TestDemapper(unittest.TestCase):
 
 
     def test_output_dimensions1(self):
+        batch_size = 99
+        dim1 = 10
+        dim2 = 12
         for num_bits_per_symbol in [1, 2, 4, 6]:
             c = Constellation("custom", num_bits_per_symbol)
             m = Mapper(constellation=c)
             d = Demapper("app", constellation=c)
-            batch_size = 99
-            dim1 = 10
-            dim2 = 12
             b = tf.random.uniform([batch_size, dim1, dim2*num_bits_per_symbol],
                                 minval=0, maxval=2, dtype=tf.dtypes.int32)
             x = m(b)
@@ -141,11 +141,11 @@ class TestDemapper(unittest.TestCase):
             self.assertEqual(llr.shape, [batch_size, dim1, dim2*num_bits_per_symbol])
 
     def test_output_dimensions2(self):
+        batch_size = 99
         for num_bits_per_symbol in [1, 2, 4, 6]:
             c = Constellation("custom", num_bits_per_symbol)
             m = Mapper(constellation=c)
             d = Demapper("app", constellation=c)
-            batch_size = 99
             b = tf.random.uniform([batch_size, num_bits_per_symbol],
                                 minval=0, maxval=2, dtype=tf.dtypes.int32)
             x = m(b)
@@ -186,7 +186,7 @@ class TestDemapper(unittest.TestCase):
         llr_app = d_app([x, No])
         llr_maxlog = d_maxlog([x, No])
         p = d_app.constellation.points
-        for l in range(0, x.shape[0]):
+        for l in range(x.shape[0]):
             for i, y in enumerate(x[l]):
                 dist = np.abs(y - p)**2
                 exp = -dist/No[l,i]
@@ -212,7 +212,7 @@ class TestDemapper(unittest.TestCase):
         llr_app = d_app([x, No])
         llr_maxlog = d_maxlog([x, No])
         p = m.constellation.points
-        for l in range(0, x.shape[0]):
+        for l in range(x.shape[0]):
             for i, y in enumerate(x[l]):
                 dist = np.abs(y - p)**2
                 exp = -dist/No[0,i]
@@ -310,13 +310,13 @@ class TestDemapperWithPrior(unittest.TestCase):
             llr = d([x, p, 1.0])
 
     def test_output_dimensions1(self):
+        batch_size = 99
+        dim1 = 10
+        dim2 = 12
         for num_bits_per_symbol in [1, 2, 4, 6]:
             c = Constellation("custom", num_bits_per_symbol)
             m = Mapper(constellation=c)
             d = DemapperWithPrior("app", constellation=c)
-            batch_size = 99
-            dim1 = 10
-            dim2 = 12
             b = tf.random.uniform([batch_size, dim1, dim2*num_bits_per_symbol],
                                 minval=0, maxval=2, dtype=tf.dtypes.int32)
             x = m(b)
@@ -325,11 +325,11 @@ class TestDemapperWithPrior(unittest.TestCase):
             self.assertEqual(llr.shape, [batch_size, dim1, dim2*num_bits_per_symbol])
 
     def test_output_dimensions2(self):
+        batch_size = 99
         for num_bits_per_symbol in [1, 2, 4, 6]:
             c = Constellation("custom", num_bits_per_symbol)
             m = Mapper(constellation=c)
             d = DemapperWithPrior("app", constellation=c)
-            batch_size = 99
             b = tf.random.uniform([batch_size, num_bits_per_symbol],
                                 minval=0, maxval=2, dtype=tf.dtypes.int32)
             x = m(b)
@@ -386,7 +386,7 @@ class TestDemapperWithPrior(unittest.TestCase):
         # Precompute priors and probabilities on symbols
         prior = tf.random.normal(tf.concat([x.shape, [num_bits_per_symbol]], axis=0))
         a = np.zeros([num_points, num_bits_per_symbol])
-        for i in range(0, num_points):
+        for i in range(num_points):
             a[i,:] = np.array(list(np.binary_repr(i, num_bits_per_symbol)),
                               dtype=np.int16)
         a = 2*a-1
@@ -398,19 +398,19 @@ class TestDemapperWithPrior(unittest.TestCase):
         llr_app = d_app([x, prior, No])
         llr_maxlog = d_maxlog([x, prior, No])
         p = d_app.constellation.points
-        for l in range(0, x.shape[0]):
+        for l in range(x.shape[0]):
             for i, y in enumerate(x[l]):
                 dist = np.abs(y - p)**2
                 exp = -dist/No[l,i]
                 ps_exp_ = ps_exp[l,i]
 
                 llrnp_app = logsumexp(np.take(exp, d_app._logits2llrs._c1) + np.take(ps_exp_, d_app._logits2llrs._c1),axis=0)\
-                    - logsumexp(np.take(exp, d_app._logits2llrs._c0) + np.take(ps_exp_, d_app._logits2llrs._c0),axis=0)
+                        - logsumexp(np.take(exp, d_app._logits2llrs._c0) + np.take(ps_exp_, d_app._logits2llrs._c0),axis=0)
                 llrtarget_app = llr_app[l,i*num_bits_per_symbol:(i+1)*num_bits_per_symbol].numpy()
                 self.assertTrue(np.allclose(llrnp_app, llrtarget_app, atol=1e-5))
 
                 llrnp_maxlog = np.max(np.take(exp, d_maxlog._logits2llrs._c1) + np.take(ps_exp_, d_app._logits2llrs._c1),axis=0)\
-                    - np.max(np.take(exp, d_maxlog._logits2llrs._c0) + np.take(ps_exp_, d_app._logits2llrs._c0),axis=0)
+                        - np.max(np.take(exp, d_maxlog._logits2llrs._c0) + np.take(ps_exp_, d_app._logits2llrs._c0),axis=0)
                 llrtarget_maxlog = llr_maxlog[l,i*num_bits_per_symbol:(i+1)*num_bits_per_symbol].numpy()
                 self.assertTrue(np.allclose(llrnp_maxlog, llrtarget_maxlog, atol=1e-5))
 
@@ -428,7 +428,7 @@ class TestDemapperWithPrior(unittest.TestCase):
         # Precompute priors and probabilities on symbols
         prior = tf.random.normal([num_bits_per_symbol])
         a = np.zeros([num_points, num_bits_per_symbol])
-        for i in range(0, num_points):
+        for i in range(num_points):
             a[i,:] = np.array(list(np.binary_repr(i, num_bits_per_symbol)),
                               dtype=np.int16)
         a = 2*a-1
@@ -439,18 +439,18 @@ class TestDemapperWithPrior(unittest.TestCase):
         llr_app = d_app([x, prior, No])
         llr_maxlog = d_maxlog([x, prior, No])
         p = m.constellation.points
-        for l in range(0, x.shape[0]):
+        for l in range(x.shape[0]):
             for i, y in enumerate(x[l]):
                 dist = np.abs(y - p)**2
                 exp = -dist/No[0,i]
 
                 llrnp_app = logsumexp(np.take(exp, d_app._logits2llrs._c1) + np.take(ps_exp, d_app._logits2llrs._c1),axis=0)\
-                    - logsumexp(np.take(exp, d_app._logits2llrs._c0) + np.take(ps_exp, d_app._logits2llrs._c0),axis=0)
+                        - logsumexp(np.take(exp, d_app._logits2llrs._c0) + np.take(ps_exp, d_app._logits2llrs._c0),axis=0)
                 llrtarget_app = llr_app[l,i*num_bits_per_symbol:(i+1)*num_bits_per_symbol].numpy()
                 self.assertTrue(np.allclose(llrnp_app, llrtarget_app, atol=1e-5))
 
                 llrnp_maxlog = np.max(np.take(exp, d_maxlog._logits2llrs._c1) + np.take(ps_exp, d_app._logits2llrs._c1),axis=0)\
-                    - np.max(np.take(exp, d_maxlog._logits2llrs._c0) + np.take(ps_exp, d_app._logits2llrs._c0),axis=0)
+                        - np.max(np.take(exp, d_maxlog._logits2llrs._c0) + np.take(ps_exp, d_app._logits2llrs._c0),axis=0)
                 llrtarget_maxlog = llr_maxlog[l,i*num_bits_per_symbol:(i+1)*num_bits_per_symbol].numpy()
                 self.assertTrue(np.allclose(llrnp_maxlog, llrtarget_maxlog, atol=1e-5))
 
@@ -540,14 +540,14 @@ class TestSymbolDemapperWithPrior(unittest.TestCase):
             logits = d([x, p, 1.0])
 
     def test_output_dimensions1(self):
+        batch_size = 32
+        dim1 = 10
+        dim2 = 12
         for num_bits_per_symbol in [1, 2, 4, 6]:
             num_points = 2**num_bits_per_symbol
             c = Constellation("custom", num_bits_per_symbol)
             m = Mapper(constellation=c)
             d = SymbolDemapperWithPrior(constellation=c)
-            batch_size = 32
-            dim1 = 10
-            dim2 = 12
             b = tf.random.uniform([batch_size, dim1, dim2*num_bits_per_symbol],
                                 minval=0, maxval=2, dtype=tf.dtypes.int32)
             x = m(b)
@@ -556,12 +556,12 @@ class TestSymbolDemapperWithPrior(unittest.TestCase):
             self.assertEqual(logits.shape, [batch_size, dim1, dim2, num_points])
 
     def test_output_dimensions2(self):
+        batch_size = 32
         for num_bits_per_symbol in [1, 2, 4, 6]:
             num_points = 2**num_bits_per_symbol
             c = Constellation("custom", num_bits_per_symbol)
             m = Mapper(constellation=c)
             d = SymbolDemapperWithPrior(constellation=c)
-            batch_size = 32
             b = tf.random.uniform([batch_size, num_bits_per_symbol],
                                 minval=0, maxval=2, dtype=tf.dtypes.int32)
             x = m(b)
@@ -622,7 +622,7 @@ class TestSymbolDemapperWithPrior(unittest.TestCase):
         #
         logits = d([x, prior, No])
         points = c.points
-        for l in range(0, x.shape[0]):
+        for l in range(x.shape[0]):
             for i, y in enumerate(x[l]):
                 dist = np.abs(y - points)**2
                 exp = -dist/No[l,i]
@@ -649,7 +649,7 @@ class TestSymbolDemapperWithPrior(unittest.TestCase):
         #
         logits = d([x, prior, No])
         points = m.constellation.points
-        for l in range(0, x.shape[0]):
+        for l in range(x.shape[0]):
             for i, y in enumerate(x[l]):
                 dist = np.abs(y - points)**2
                 exp = -dist/No[0,i]
@@ -741,14 +741,14 @@ class TestSymbolDemapper(unittest.TestCase):
             logits = d([x, no])
 
     def test_output_dimensions1(self):
+        batch_size = 32
+        dim1 = 10
+        dim2 = 12
         for num_bits_per_symbol in [1, 2, 4, 6]:
             num_points = 2**num_bits_per_symbol
             c = Constellation("custom", num_bits_per_symbol)
             m = Mapper(constellation=c)
             d = SymbolDemapper(constellation=c)
-            batch_size = 32
-            dim1 = 10
-            dim2 = 12
             b = tf.random.uniform([batch_size, dim1, dim2*num_bits_per_symbol],
                                 minval=0, maxval=2, dtype=tf.dtypes.int32)
             x = m(b)
@@ -756,12 +756,12 @@ class TestSymbolDemapper(unittest.TestCase):
             self.assertEqual(logits.shape, [batch_size, dim1, dim2, num_points])
 
     def test_output_dimensions2(self):
+        batch_size = 32
         for num_bits_per_symbol in [1, 2, 4, 6]:
             num_points = 2**num_bits_per_symbol
             c = Constellation("custom", num_bits_per_symbol)
             m = Mapper(constellation=c)
             d = SymbolDemapper(constellation=c)
-            batch_size = 32
             b = tf.random.uniform([batch_size, num_bits_per_symbol],
                                 minval=0, maxval=2, dtype=tf.dtypes.int32)
             x = m(b)
@@ -798,7 +798,7 @@ class TestSymbolDemapper(unittest.TestCase):
         #
         logits = d([x, No])
         points = c.points
-        for l in range(0, x.shape[0]):
+        for l in range(x.shape[0]):
             for i, y in enumerate(x[l]):
                 dist = np.abs(y - points)**2
                 exp = -dist/No[l,i]
@@ -821,7 +821,7 @@ class TestSymbolDemapper(unittest.TestCase):
         #
         logits = d([x, No])
         points = m.constellation.points
-        for l in range(0, x.shape[0]):
+        for l in range(x.shape[0]):
             for i, y in enumerate(x[l]):
                 dist = np.abs(y - points)**2
                 exp = -dist/No[0,i]
@@ -907,11 +907,11 @@ class TestSymbolLogits2LLRsWithPrior(unittest.TestCase):
             llr = d([l, p])
 
     def test_output_dimensions1(self):
+        batch_size = 99
+        dim1 = 10
+        dim2 = 12
         for num_bits_per_symbol in [1, 2, 4, 6]:
             d = SymbolLogits2LLRsWithPrior("app", num_bits_per_symbol)
-            batch_size = 99
-            dim1 = 10
-            dim2 = 12
             l = tf.random.uniform([batch_size, dim1, dim2, 2**num_bits_per_symbol],
                                 minval=-20.0, maxval=20.0, dtype=tf.dtypes.float32)
             p = tf.random.uniform([num_bits_per_symbol])
@@ -919,9 +919,9 @@ class TestSymbolLogits2LLRsWithPrior(unittest.TestCase):
             self.assertEqual(llr.shape, [batch_size, dim1, dim2, num_bits_per_symbol])
 
     def test_output_dimensions2(self):
+        batch_size = 99
         for num_bits_per_symbol in [1, 2, 4, 6]:
             d = SymbolLogits2LLRsWithPrior("app", num_bits_per_symbol)
-            batch_size = 99
             l = tf.random.uniform([batch_size, 2**num_bits_per_symbol],
                                 minval=-20.0, maxval=20.0, dtype=tf.dtypes.float32)
             p = tf.random.uniform([num_bits_per_symbol])
@@ -952,7 +952,7 @@ class TestSymbolLogits2LLRsWithPrior(unittest.TestCase):
         # Precompute priors and probabilities on symbols
         prior = tf.random.normal(tf.concat([logits.shape[:-1], [num_bits_per_symbol]], axis=0))
         a = np.zeros([num_points, num_bits_per_symbol])
-        for i in range(0, num_points):
+        for i in range(num_points):
             a[i,:] = np.array(list(np.binary_repr(i, num_bits_per_symbol)),
                               dtype=np.int16)
         a = 2*a-1
@@ -963,17 +963,17 @@ class TestSymbolLogits2LLRsWithPrior(unittest.TestCase):
         #
         llr_app = d_app([logits, prior])
         llr_maxlog = d_maxlog([logits, prior])
-        for b in range(0, logits.shape[0]):
-            for i in range(0, logits.shape[1]):
+        for b in range(logits.shape[0]):
+            for i in range(logits.shape[1]):
                 ps_exp_ = ps_exp[b,i]
 
                 llrnp_app = logsumexp(np.take(logits[b,i], d_app._c1) + np.take(ps_exp_, d_app._c1),axis=0)\
-                    - logsumexp(np.take(logits[b,i], d_app._c0) + np.take(ps_exp_, d_app._c0),axis=0)
+                        - logsumexp(np.take(logits[b,i], d_app._c0) + np.take(ps_exp_, d_app._c0),axis=0)
                 llrtarget_app = llr_app[b,i].numpy()
                 self.assertTrue(np.allclose(llrnp_app, llrtarget_app, atol=1e-5))
 
                 llrnp_maxlog = np.max(np.take(logits[b,i], d_maxlog._c1) + np.take(ps_exp_, d_app._c1),axis=0)\
-                    - np.max(np.take(logits[b,i], d_maxlog._c0) + np.take(ps_exp_, d_app._c0),axis=0)
+                        - np.max(np.take(logits[b,i], d_maxlog._c0) + np.take(ps_exp_, d_app._c0),axis=0)
                 llrtarget_maxlog = llr_maxlog[b,i].numpy()
                 self.assertTrue(np.allclose(llrnp_maxlog, llrtarget_maxlog, atol=1e-5))
 
@@ -1019,20 +1019,20 @@ class TestSymbolLogits2LLRs(unittest.TestCase):
             SymbolLogits2LLRs("asdfiu", 6)
 
     def test_output_dimensions1(self):
+        batch_size = 99
+        dim1 = 10
+        dim2 = 12
         for num_bits_per_symbol in [1, 2, 4, 6]:
             d = SymbolLogits2LLRs("app", num_bits_per_symbol)
-            batch_size = 99
-            dim1 = 10
-            dim2 = 12
             l = tf.random.uniform([batch_size, dim1, dim2, 2**num_bits_per_symbol],
                                 minval=-20.0, maxval=20.0, dtype=tf.dtypes.float32)
             llr = d(l)
             self.assertEqual(llr.shape, [batch_size, dim1, dim2, num_bits_per_symbol])
 
     def test_output_dimensions2(self):
+        batch_size = 99
         for num_bits_per_symbol in [1, 2, 4, 6]:
             d = SymbolLogits2LLRs("app", num_bits_per_symbol)
-            batch_size = 99
             l = tf.random.uniform([batch_size, 2**num_bits_per_symbol],
                                 minval=-20.0, maxval=20.0, dtype=tf.dtypes.float32)
             llr = d(l)
@@ -1048,8 +1048,8 @@ class TestSymbolLogits2LLRs(unittest.TestCase):
                                         minval=-20.0, maxval=20.0, dtype=tf.dtypes.float32)
         llr_app = d_app(logits)
         llr_maxlog = d_maxlog(logits)
-        for b in range(0, logits.shape[0]):
-            for i in range(0, logits.shape[1]):
+        for b in range(logits.shape[0]):
+            for i in range(logits.shape[1]):
                 llrnp_app = logsumexp(np.take(logits[b,i], d_app._c1),axis=0) - logsumexp(np.take(logits[b,i], d_app._c0),axis=0)
                 llrtarget_app = llr_app[b,i].numpy()
                 self.assertTrue(np.allclose(llrnp_app, llrtarget_app, atol=1e-5))
@@ -1091,11 +1091,11 @@ class TestSymbolLogits2LLRs(unittest.TestCase):
 
 class TestSymbolLogits2Moments(unittest.TestCase):
     def test_output_dimensions1(self):
+        batch_size = 99
+        dim1 = 10
+        dim2 = 12
         for num_bits_per_symbol in [2, 4, 6]:
             d = SymbolLogits2Moments("qam", num_bits_per_symbol)
-            batch_size = 99
-            dim1 = 10
-            dim2 = 12
             l = tf.random.uniform([batch_size, dim1, dim2, 2**num_bits_per_symbol],
                                 minval=-20.0, maxval=20.0, dtype=tf.dtypes.float32)
             m, v = d(l)
@@ -1103,9 +1103,9 @@ class TestSymbolLogits2Moments(unittest.TestCase):
             self.assertEqual(v.shape, [batch_size, dim1, dim2])
 
     def test_output_dimensions2(self):
+        batch_size = 99
         for num_bits_per_symbol in [2, 4, 6]:
             d = SymbolLogits2Moments("qam", num_bits_per_symbol)
-            batch_size = 99
             l = tf.random.uniform([batch_size, 2**num_bits_per_symbol],
                                 minval=-20.0, maxval=20.0, dtype=tf.dtypes.float32)
             m,v = d(l)
@@ -1124,7 +1124,7 @@ class TestSymbolLogits2Moments(unittest.TestCase):
                                         minval=-20.0, maxval=20.0, dtype=tf.dtypes.float32)
         m,v = d(logits)
 
-        for l in range(0, logits.shape[0]):
+        for l in range(logits.shape[0]):
             p = softmax(logits[l])
             m_ = np.sum(p*points)
             v_ = np.sum(p*np.square(points-m_))

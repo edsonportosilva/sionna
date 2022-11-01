@@ -40,16 +40,18 @@ class TestConvolve(unittest.TestCase):
                          (tf.complex128, tf.float64) : tf.complex128,
                          (tf.complex128, tf.complex128) : tf.complex128}
         for padding in ('valid', 'same', 'full'):
-            for dtypes in expected_type:
+            for dtypes, value in expected_type.items():
                 inp_dtype = dtypes[0]
                 ker_dtype = dtypes[1]
-                if inp_dtype.is_complex:
-                    inp = tf.complex(tf.random.uniform([64, 100],
-                                        dtype=inp_dtype.real_dtype),
-                                     tf.random.uniform([64, 100],
-                                        dtype=inp_dtype.real_dtype))
-                else:
-                    inp = tf.random.uniform([64, 100], dtype=inp_dtype)
+                inp = (
+                    tf.complex(
+                        tf.random.uniform([64, 100], dtype=inp_dtype.real_dtype),
+                        tf.random.uniform([64, 100], dtype=inp_dtype.real_dtype),
+                    )
+                    if inp_dtype.is_complex
+                    else tf.random.uniform([64, 100], dtype=inp_dtype)
+                )
+
                 if ker_dtype.is_complex:
                     ker = tf.complex(tf.random.uniform([10],
                                         dtype=ker_dtype.real_dtype),
@@ -58,7 +60,7 @@ class TestConvolve(unittest.TestCase):
                 else:
                     ker = tf.random.uniform([10], dtype=ker_dtype)
                 out = convolve(inp, ker, padding)
-                self.assertEqual(out.dtype, expected_type[dtypes])
+                self.assertEqual(out.dtype, value)
 
     def test_shape(self):
         """Test the output shape for all padding models and for even and odd

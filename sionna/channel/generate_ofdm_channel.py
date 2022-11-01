@@ -83,7 +83,6 @@ class GenerateOFDMChannel:
                                     self._num_ofdm_symbols,
                                     self._sampling_frequency)
 
-        h_freq = cir_to_ofdm_channel(self._frequencies, h, tau,
-                                     self._normalize_channel)
-
-        return h_freq
+        return cir_to_ofdm_channel(
+            self._frequencies, h, tau, self._normalize_channel
+        )

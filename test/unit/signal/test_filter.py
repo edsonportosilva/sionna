@@ -46,21 +46,29 @@ class TestFilter(unittest.TestCase):
         samples_per_symbol = 4
         filter_length = samples_per_symbol*span_in_symbols+1
         for padding in ('valid', 'same', 'full'):
-            for dtypes in expected_type:
+            for dtypes, value in expected_type.items():
                 inp_dtype = dtypes[0]
                 fil_dtype = dtypes[1]
-                if inp_dtype.is_complex:
-                    inp = tf.complex(tf.random.uniform([batch_size, inp_length],
-                                        dtype=inp_dtype.real_dtype),
-                                     tf.random.uniform([batch_size, inp_length],
-                                        dtype=inp_dtype.real_dtype))
-                else:
-                    inp = tf.random.uniform([batch_size, inp_length], dtype=inp_dtype)
+                inp = (
+                    tf.complex(
+                        tf.random.uniform(
+                            [batch_size, inp_length], dtype=inp_dtype.real_dtype
+                        ),
+                        tf.random.uniform(
+                            [batch_size, inp_length], dtype=inp_dtype.real_dtype
+                        ),
+                    )
+                    if inp_dtype.is_complex
+                    else tf.random.uniform(
+                        [batch_size, inp_length], dtype=inp_dtype
+                    )
+                )
+
                 #########################
                 # No windowing
                 filt = CustomFilter(span_in_symbols, samples_per_symbol, dtype=fil_dtype)
                 out = filt(inp, padding=padding)
-                self.assertEqual(out.dtype, expected_type[dtypes])
+                self.assertEqual(out.dtype, value)
                 #########################
                 # Windowing
                 win_dtype = fil_dtype if fil_dtype.is_floating else fil_dtype.real_dtype

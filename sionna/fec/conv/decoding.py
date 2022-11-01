@@ -81,25 +81,25 @@ class ViterbiDecoder(Layer):
 
         if gen_poly is not None:
             assert all(isinstance(poly, str) for poly in gen_poly), \
-                "Each polynomial must be a string."
+                    "Each polynomial must be a string."
             assert all(len(poly)==len(gen_poly[0]) for poly in gen_poly), \
-                "Each polynomial must be of same length."
+                    "Each polynomial must be of same length."
             assert all(all(
                 char in ['0','1'] for char in poly) for poly in gen_poly),\
-                "Each polynomial must be a string of 0's and 1's."
+                    "Each polynomial must be a string of 0's and 1's."
             self._gen_poly = gen_poly
         else:
             valid_rates = (1/2, 1/3)
             valid_constraint_length = (3, 4, 5, 6, 7, 8)
 
             assert constraint_length in valid_constraint_length, \
-                "Constraint length must be between 3 and 8."
+                    "Constraint length must be between 3 and 8."
             assert rate in valid_rates, \
-                "Rate must be 1/3 or 1/2."
+                    "Rate must be 1/3 or 1/2."
             self._gen_poly = polynomial_selector(rate, constraint_length)
 
         assert method in ('soft_llr', 'soft', 'hard'), \
-            "method must be `soft_llr` `soft` or `hard`."
+                "method must be `soft_llr` `soft` or `hard`."
 
         # init Trellis parameters
         self._trellis = Trellis(self.gen_poly)
@@ -371,6 +371,4 @@ class ViterbiDecoder(Layer):
         msghat = tf.cast(msghat, self.output_dtype)
         cwhat = tf.cast(cwhat, self.output_dtype)
 
-        msghat_reshaped = tf.reshape(msghat, output_shape)
-
-        return msghat_reshaped
+        return tf.reshape(msghat, output_shape)

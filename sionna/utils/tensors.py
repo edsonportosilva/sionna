@@ -31,9 +31,7 @@ def expand_to_rank(tensor, target_rank, axis=-1):
         If ``target_rank`` <= rank(``tensor``), ``tensor`` is returned.
     """
     num_dims = tf.maximum(target_rank - tf.rank(tensor), 0)
-    output = insert_dims(tensor, num_dims, axis)
-
-    return output
+    return insert_dims(tensor, num_dims, axis)
 
 def flatten_dims(tensor, num_dims, axis):
     """
@@ -145,9 +143,7 @@ def insert_dims(tensor, num_dims, axis=-1):
     new_shape = tf.concat([shape[:axis],
                            tf.ones([num_dims], tf.int32),
                            shape[axis:]], 0)
-    output = tf.reshape(tensor, new_shape)
-
-    return output
+    return tf.reshape(tensor, new_shape)
 
 def split_dim(tensor, shape, axis):
     """Reshapes a dimension of a tensor into multiple dimensions.
@@ -171,9 +167,7 @@ def split_dim(tensor, shape, axis):
 
     s = tf.shape(tensor)
     new_shape = tf.concat([s[:axis], shape, s[axis+1:]], 0)
-    output = tf.reshape(tensor, new_shape)
-
-    return output
+    return tf.reshape(tensor, new_shape)
 
 def matrix_sqrt(tensor):
     r""" Computes the square root of a matrix.
@@ -199,19 +193,18 @@ def matrix_sqrt(tensor):
         you must set ``sionna.Config.xla_compat=true``.
         See :py:attr:`~sionna.Config.xla_compat`.
     """
-    if sn.config.xla_compat and not tf.executing_eagerly():
-        s, u = tf.linalg.eigh(tensor)
-
-        # Compute sqrt of eigenvalues
-        s = tf.abs(s)
-        s = tf.sqrt(s)
-        s = tf.cast(s, u.dtype)
-
-        # Matrix multiplication
-        s = tf.expand_dims(s, -2)
-        return tf.matmul(u*s, u, adjoint_b=True)
-    else:
+    if not sn.config.xla_compat or tf.executing_eagerly():
         return tf.linalg.sqrtm(tensor)
+    s, u = tf.linalg.eigh(tensor)
+
+    # Compute sqrt of eigenvalues
+    s = tf.abs(s)
+    s = tf.sqrt(s)
+    s = tf.cast(s, u.dtype)
+
+    # Matrix multiplication
+    s = tf.expand_dims(s, -2)
+    return tf.matmul(u*s, u, adjoint_b=True)
 
 def matrix_sqrt_inv(tensor):
     r""" Computes the inverse square root of a Hermitian matrix.
@@ -239,20 +232,19 @@ def matrix_sqrt_inv(tensor):
         you must set ``sionna.Config.xla_compat=true``.
         See :py:attr:`~sionna.Config.xla_compat`.
     """
-    if sn.config.xla_compat and not tf.executing_eagerly():
-        s, u = tf.linalg.eigh(tensor)
-
-        # Compute 1/sqrt of eigenvalues
-        s = tf.abs(s)
-        tf.debugging.assert_positive(s, "Input must be positive definite.")
-        s = 1/tf.sqrt(s)
-        s = tf.cast(s, u.dtype)
-
-        # Matrix multiplication
-        s = tf.expand_dims(s, -2)
-        return tf.matmul(u*s, u, adjoint_b=True)
-    else:
+    if not sn.config.xla_compat or tf.executing_eagerly():
         return tf.linalg.inv(tf.linalg.sqrtm(tensor))
+    s, u = tf.linalg.eigh(tensor)
+
+    # Compute 1/sqrt of eigenvalues
+    s = tf.abs(s)
+    tf.debugging.assert_positive(s, "Input must be positive definite.")
+    s = 1/tf.sqrt(s)
+    s = tf.cast(s, u.dtype)
+
+    # Matrix multiplication
+    s = tf.expand_dims(s, -2)
+    return tf.matmul(u*s, u, adjoint_b=True)
 
 def matrix_inv(tensor):
     r""" Computes the inverse of a Hermitian matrix.
@@ -279,19 +271,20 @@ def matrix_inv(tensor):
         you must set ``sionna.Config.xla_compat=true``.
         See :py:attr:`~sionna.Config.xla_compat`.
     """
-    if tensor.dtype in [tf.complex64, tf.complex128] \
-                    and sn.config.xla_compat \
-                    and not tf.executing_eagerly():
-        s, u = tf.linalg.eigh(tensor)
-
-        # Compute inverse of eigenvalues
-        s = tf.abs(s)
-        tf.debugging.assert_positive(s, "Input must be positive definite.")
-        s = 1/s
-        s = tf.cast(s, u.dtype)
-
-        # Matrix multiplication
-        s = tf.expand_dims(s, -2)
-        return tf.matmul(u*s, u, adjoint_b=True)
-    else:
+    if (
+        tensor.dtype not in [tf.complex64, tf.complex128]
+        or not sn.config.xla_compat
+        or tf.executing_eagerly()
+    ):
         return tf.linalg.inv(tensor)
+    s, u = tf.linalg.eigh(tensor)
+
+    # Compute inverse of eigenvalues
+    s = tf.abs(s)
+    tf.debugging.assert_positive(s, "Input must be positive definite.")
+    s = 1/s
+    s = tf.cast(s, u.dtype)
+
+    # Matrix multiplication
+    s = tf.expand_dims(s, -2)
+    return tf.matmul(u*s, u, adjoint_b=True)

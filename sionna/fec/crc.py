@@ -212,9 +212,7 @@ class CRCEncoder(Layer):
         x_crc = tf.cast(x_bin, dtype=self.dtype)
 
         x_conc = tf.concat([x_exp, x_crc], -1)
-        x_out = tf.squeeze(x_conc, axis=-2)
-
-        return x_out
+        return tf.squeeze(x_conc, axis=-2)
 
 
 class CRCDecoder(Layer):

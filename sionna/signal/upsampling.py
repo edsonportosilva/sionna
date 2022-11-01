@@ -40,9 +40,7 @@ class Upsampling(Layer):
         self._axis = axis
 
     def build(self, input_shape):
-        paddings = []
-        for _ in range(len(input_shape)):
-            paddings.append([0, 0])
+        paddings = [[0, 0] for _ in range(len(input_shape))]
         paddings.append([0, self._samples_per_symbol-1])
         self._paddings = paddings
 

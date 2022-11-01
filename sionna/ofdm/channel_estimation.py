@@ -305,7 +305,7 @@ class LinearInterpolator():
         super().__init__()
 
         assert(pilot_pattern.num_pilot_symbols>0),\
-            """The pilot pattern cannot be empty"""
+                """The pilot pattern cannot be empty"""
 
         self._time_avg = time_avg
 
@@ -320,7 +320,7 @@ class LinearInterpolator():
 
         max_num_zero_pilots = np.max(np.sum(np.abs(pilots)==0, -1))
         assert max_num_zero_pilots<pilots.shape[-1],\
-            """Each pilot sequence must have at least one nonzero entry"""
+                """Each pilot sequence must have at least one nonzero entry"""
 
         # Create actual pilot patterns for each stream over the resource grid
         z = np.zeros_like(mask, dtype=pilots.dtype)

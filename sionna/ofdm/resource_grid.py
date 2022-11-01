@@ -113,8 +113,7 @@ class ResourceGrid():
     @property
     def num_effective_subcarriers(self):
         """Number of subcarriers used for data and pilot transmissions."""
-        n = self._fft_size - self._dc_null - np.sum(self._num_guard_carriers)
-        return n
+        return self._fft_size - self._dc_null - np.sum(self._num_guard_carriers)
 
     @property
     def effective_subcarrier_ind(self):
@@ -270,12 +269,16 @@ class ResourceGrid():
         dc   = 3*tf.ones(shape + [tf.cast(self._dc_null, tf.int32)], tf.int32)
         mask = self.pilot_pattern.mask
         split_ind = self.dc_ind-self._num_guard_carriers[0]
-        rg_type = tf.concat([gc_l,                 # Left Guards
-                             mask[...,:split_ind], # Data & pilots
-                             dc,                   # DC
-                             mask[...,split_ind:], # Data & pilots
-                             gc_r], -1)            # Right guards
-        return rg_type
+        return tf.concat(
+            [
+                gc_l,  # Left Guards
+                mask[..., :split_ind],  # Data & pilots
+                dc,  # DC
+                mask[..., split_ind:],  # Data & pilots
+                gc_r,
+            ],
+            -1,
+        )
 
     def show(self, tx_ind=0, tx_stream_ind=0):
         """Visualizes the resource grid for a specific transmitter and antenna.

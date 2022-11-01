@@ -148,7 +148,7 @@ class TestBPDecoding(unittest.TestCase):
 
         res2 = dec2(llr) # iter 0 to init msg_vn
 
-        for i in range(Niter-1): # remaining iterations
+        for _ in range(Niter-1):
             res2 = dec2(llr)
         # results must be the same, otherwise the internal state is not
         # correctly recovered
@@ -239,10 +239,10 @@ class TestBPDecoding(unittest.TestCase):
 
                         # and check that array is not None
                         for g in grads:
-                            self.assertTrue(not g is None), "grad is None"
+                            (self.assertTrue(g is not None), "grad is None")
                     else:
                         self.assertTrue(len(grads)==0), \
-                                     "gradient should not exist"
+                                         "gradient should not exist"
 
     def test_all_erasure(self):
         """Test that all-erasure (llr=0) cw yields constant all zero output."""
@@ -560,10 +560,10 @@ class TestBPDecoding5G(unittest.TestCase):
 
                         # and check that array is not None
                         for g in grads:
-                            self.assertTrue(not g is None), "grad is None"
+                            (self.assertTrue(g is not None), "grad is None")
                     else:
                         self.assertTrue(len(grads)==0), \
-                                                "gradient should not exist"
+                                                    "gradient should not exist"
 
     def test_dtype(self):
         """Test that output dtype can be flexible."""

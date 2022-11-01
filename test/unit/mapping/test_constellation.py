@@ -41,7 +41,7 @@ class TestPAMGray(unittest.TestCase):
     def test_pam(self):
         """Test against 5G formulars"""
         for n, comp in enumerate([bpsk, pam4, pam8, pam16]):
-            for i in range(0, 2**n):
+            for i in range(2**n):
                 b = np.array(list(np.binary_repr(i,n+1)), dtype=np.int16)
                 self.assertEqual(pam_gray(b), comp(b))
 
@@ -51,7 +51,7 @@ class TestPAM(unittest.TestCase):
         for n, comp in enumerate([bpsk, pam4, pam8, pam16]):
             num_bits_per_symbol = n+1
             c = pam(num_bits_per_symbol, normalize=False)
-            for i in range(0, 2**num_bits_per_symbol):
+            for i in range(2**num_bits_per_symbol):
                 b = np.array(list(np.binary_repr(i,num_bits_per_symbol)), dtype=np.int16)
                 self.assertTrue(np.equal(c[i], comp(b)))
 
@@ -73,9 +73,9 @@ class TestQAM(unittest.TestCase):
         for n, pam in enumerate([bpsk, pam4, pam8, pam16]):
             num_bits_per_symbol = 2*(n+1)
             c = qam(num_bits_per_symbol, normalize=False)
-            for i in range(0, 2**num_bits_per_symbol):
+            for i in range(2**num_bits_per_symbol):
                 b = np.array(list(np.binary_repr(i,2*(n+1))), dtype=np.int16)
-                self.assertTrue(np.equal(c[i], pam(b[0::2]) + 1j*pam(b[1::2])))
+                self.assertTrue(np.equal(c[i], pam(b[::2]) + 1j*pam(b[1::2])))
 
 class TestConstellation(unittest.TestCase):
     def test_assertions(self):

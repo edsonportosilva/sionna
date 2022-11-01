@@ -100,7 +100,7 @@ class WeightedBP(tf.keras.Model):
         c = tf.zeros([batch_size, self._n])
         llr = self.llr_source([[batch_size, self._n], noise_var])
         loss = 0
-        for i in range(self._num_iter):
+        for _ in range(self._num_iter):
             c_hat = self.decoder(llr)
             loss += self._bce(c, c_hat)  # add loss after each iteration
 
@@ -179,7 +179,7 @@ class WeightedBP5G(tf.keras.Model):
         c = tf.zeros([batch_size, self._k]) # decoder only returns info bits
         llr = self.llr_source([[batch_size, self._n], noise_var])
         loss = 0
-        for i in range(self._num_iter):
+        for _ in range(self._num_iter):
             c_hat = self.decoder(llr)
             loss += self._bce(c, c_hat)  # add loss after each iteration
 
@@ -224,7 +224,7 @@ class TestWeightedBP(unittest.TestCase):
         # try also different optimizers or different hyperparameters
         optimizer = tf.keras.optimizers.Adam(learning_rate=1e-2)
 
-        for it in range(0, train_iter):
+        for _ in range(train_iter):
             with tf.GradientTape() as tape:
                 b, llr, loss = model(batch_size, ebno_db)
 
@@ -273,7 +273,7 @@ class TestWeightedBP(unittest.TestCase):
         optimizer = tf.keras.optimizers.Adam(learning_rate=1e-2)
 
         # and let's go
-        for it in range(0, train_iter):
+        for _ in range(train_iter):
             with tf.GradientTape() as tape:
                 b, llr, loss = model5G(batch_size, ebno_db)
 
